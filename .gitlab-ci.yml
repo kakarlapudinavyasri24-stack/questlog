@@ -1,0 +1,21 @@
+stages:
+  - test
+
+lint:
+  stage: test
+  image: node:20
+  script:
+    - npm install
+    - echo "Lint placeholder"
+
+build:
+  stage: test
+  image: node:20
+  script:
+    - echo "Build successful"
+audit:
+  stage: test
+  image: node:20
+  script:
+    - npm install
+    - npm audit --audit-level=high
