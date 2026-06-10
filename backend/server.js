@@ -6,16 +6,21 @@ const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 4000;
 const DB_PATH = path.join(__dirname, "db.json");
+const FRONTEND_DIST_PATH = path.join(__dirname, "..", "frontend", "dist");
 
 app.use(cors());
 app.use(express.json());
+
+if (fs.existsSync(FRONTEND_DIST_PATH)) {
+  app.use(express.static(FRONTEND_DIST_PATH));
+}
 
 function readDb() {
   try {
     const raw = fs.readFileSync(DB_PATH, "utf8");
     const data = JSON.parse(raw);
     return { tasks: Array.isArray(data.tasks) ? data.tasks : [] };
-  } catch (error) {
+  } catch {
     return { tasks: [] };
   }
 }
@@ -67,8 +72,14 @@ function mockChronicle(tasks, gameState = {}) {
     return `The ${title} found no quests etched into the log today, only a quiet road and a waiting sky. The realm did not move, but the flame of intent still flickered. Tomorrow, even one small quest can begin the legend again.`;
   }
 
-  const completedNames = completed.slice(0, 3).map((task) => `"${task.title}"`).join(", ");
-  const abandonedNames = abandoned.slice(0, 2).map((task) => `"${task.title}"`).join(", ");
+  const completedNames = completed
+    .slice(0, 3)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
+  const abandonedNames = abandoned
+    .slice(0, 2)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
   const opening =
     hp <= 35
       ? `Bloodied but upright, the ${title} dragged the Questlog through a hard day of ${total} quest${total === 1 ? "" : "s"}.`
@@ -147,14 +158,28 @@ app.put("/tasks/:id", (req, res) => {
 
 app.post("/chronicle", (req, res) => {
   const { tasks, gameState, demoMode } = req.body;
-  const story = demoMode ? mockChronicle(tasks || [], gameState || {}) : mockChronicle(tasks || [], gameState || {});
+  const story = demoMode
+    ? mockChronicle(tasks || [], gameState || {})
+    : mockChronicle(tasks || [], gameState || {});
   res.json({ story });
 });
 
 const HOST = process.env.HOST || "0.0.0.0";
 const LISTEN_ADDRESS = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
-app.listen(PORT, HOST, () => {
-  console.log(`Backend running at ${LISTEN_ADDRESS}`);
-  console.log(`Listening on ${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`Backend running at ${LISTEN_ADDRESS}`);
+    console.log(`Listening on ${HOST}:${PORT}`);
+  });
+}
+
+module.exports = {
+  app,
+  buildChroniclePrompt,
+  FRONTEND_DIST_PATH,
+  mockChronicle,
+  normalizeTaskType,
+  readDb,
+  writeDb
+};

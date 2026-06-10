@@ -4,14 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint . --ext .js,.jsx",
-    "format": "prettier --write .",
-    "check:biome": "biome check .",
-    "lint:oxc": "oxlint --config .oxlintrc.json",
-    "check:unused": "knip"
+  "dev": "vite",
+  "build": "vite build",
+  "start": "vite preview --host 127.0.0.1 --port 5174",
+  "preview": "vite preview",
+  "lint": "eslint . --max-warnings=0",
+  "format": "prettier . --write",
+  "format:check": "prettier . --check",
+  "typecheck": "knip --include files,dependencies",
+  "test": "vitest run",
+  "coverage": "vitest run --coverage",
+  "audit": "npm audit --audit-level=high",
+  "check:biome": "biome check .",
+  "lint:oxc": "oxlint --config .oxlintrc.json",
+  "check:unused": "knip"
+
   },
   "dependencies": {
     "react": "^18.2.0",

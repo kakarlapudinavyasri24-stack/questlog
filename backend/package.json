@@ -1,15 +1,26 @@
 {
-  "name": "backend",
+  "name": "questlog-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Express API for QuestLog.",
   "main": "server.js",
   "scripts": {
+    "dev": "node server.js",
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "knip --include files,dependencies",
+    "test": "vitest run ../backend/**/*.test.js",
+    "coverage": "vitest run --coverage ../backend/**/*.test.js",
+    "audit": "npm audit --audit-level=high"
   },
-  "keywords": [],
+  "keywords": [
+    "questlog",
+    "express",
+    "productivity"
+  ],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-only",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
