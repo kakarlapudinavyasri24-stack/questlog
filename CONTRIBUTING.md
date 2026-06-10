@@ -12,16 +12,16 @@ Thank you for your interest in contributing to Questlog.
 
 ## Pull Requests
 
-* Create a feature branch
-* Write clear commit messages
-* Test changes before submitting
-* Ensure documentation is updated
+- Create a feature branch
+- Write clear commit messages
+- Test changes before submitting
+- Ensure documentation is updated
 
 ## Reporting Issues
 
 Please include:
 
-* Expected behavior
-* Actual behavior
-* Steps to reproduce
-* Screenshots if applicable
+- Expected behavior
+- Actual behavior
+- Steps to reproduce
+- Screenshots if applicable

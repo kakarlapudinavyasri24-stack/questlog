@@ -1,0 +1,17 @@
+.git
+.gitlab-ci.yml
+node_modules
+**/node_modules
+coverage
+dist
+frontend/dist
+npm-debug.log*
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea
+.vscode
+.specify
+.gemini
