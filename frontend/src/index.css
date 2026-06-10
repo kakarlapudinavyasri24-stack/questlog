@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700;900&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700;900&display=swap');
 
 :root {
   --bg-deep: #080e1f;
@@ -18,7 +18,7 @@
   --pill-main: #ff6f6f;
   --pill-side: #3db8ff;
   --pill-daily: #72f080;
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   color: var(--text-body);
   background: var(--bg-deep);
   font-synthesis: none;
@@ -35,13 +35,14 @@ body {
   min-height: 100vh;
   background:
     linear-gradient(90deg, rgba(61, 184, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(rgba(61, 184, 255, 0.045) 1px, transparent 1px), var(--bg-deep);
+    linear-gradient(rgba(61, 184, 255, 0.045) 1px, transparent 1px),
+    var(--bg-deep);
   background-size: 28px 28px;
 }
 
 /* ── typography ─────────────────────────────────── */
 .pixel {
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
 }
 
 h1,
@@ -143,7 +144,7 @@ select option {
 }
 
 .brand h1 {
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.1rem;
   color: var(--text-head);
   text-shadow: 2px 2px 0 #0a1428;
@@ -350,7 +351,7 @@ select option {
   padding: 14px 20px;
 }
 .streak-card span {
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.2rem;
   color: var(--text-head);
 }
@@ -367,7 +368,7 @@ select option {
 
 /* ── pixel-kicker ─────────────────────────────────── */
 .pixel-kicker {
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 0.55rem;
   color: var(--blue-lit);
   letter-spacing: 0.1em;
@@ -384,7 +385,7 @@ select option {
   overflow: hidden;
 }
 .hero-banner::after {
-  content: "";
+  content: '';
   position: absolute;
   inset: 0;
   background: repeating-linear-gradient(
@@ -395,7 +396,7 @@ select option {
   pointer-events: none;
 }
 .hero-banner h2 {
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.1rem;
   color: var(--text-head);
   line-height: 1.5;
@@ -472,7 +473,7 @@ select option {
 }
 .stats-grid span {
   display: block;
-  font-family: "Press Start 2P", monospace;
+  font-family: 'Press Start 2P', monospace;
   font-size: 1.2rem;
   color: var(--gold);
   margin-bottom: 6px;

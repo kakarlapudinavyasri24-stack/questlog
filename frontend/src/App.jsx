@@ -1,31 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react'
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-const QUEST_TYPES = { main: "Main quest", side: "Side quest", daily: "Daily quest" };
-const XP_REWARD = { main: 45, side: 30, daily: 20 };
-const HP_DAMAGE = { main: 25, side: 15, daily: 10 };
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
+const QUEST_TYPES = {
+  main: 'Main quest',
+  side: 'Side quest',
+  daily: 'Daily quest',
+}
+const XP_REWARD = { main: 45, side: 30, daily: 20 }
+const HP_DAMAGE = { main: 25, side: 15, daily: 10 }
 const LEVELS = [
-  { title: "Wanderer", xp: 0 },
-  { title: "Scout", xp: 100 },
-  { title: "Adventurer", xp: 250 },
-  { title: "Knight", xp: 450 },
-  { title: "Champion", xp: 700 },
-  { title: "Legend", xp: 1000 },
-  { title: "Mythic", xp: 1400 }
-];
+  { title: 'Wanderer', xp: 0 },
+  { title: 'Scout', xp: 100 },
+  { title: 'Adventurer', xp: 250 },
+  { title: 'Knight', xp: 450 },
+  { title: 'Champion', xp: 700 },
+  { title: 'Legend', xp: 1000 },
+  { title: 'Mythic', xp: 1400 },
+]
 const BADGES = [
-  { id: "first-blood", name: "First Blood", hint: "Complete your first quest." },
-  { id: "perfect-day", name: "Perfect Day", hint: "End a day with every quest completed." },
-  { id: "survivor", name: "Survivor", hint: "Keep going at critical HP." },
-  { id: "strategist", name: "Strategist", hint: "Complete a main, side, and daily quest." },
-  { id: "ghost", name: "Ghost", hint: "Abandon 3 quests." },
-  { id: "chronicler", name: "Chronicler", hint: "Generate your first Chronicle." },
-  { id: "variety-hero", name: "Variety Hero", hint: "Log all three quest types." },
-  { id: "on-fire", name: "On Fire", hint: "Reach a 3-day streak." },
-  { id: "unstoppable", name: "Unstoppable", hint: "Reach a 7-day streak." },
-  { id: "centurion", name: "Centurion", hint: "Complete 100 quests." },
-  { id: "creature-of-habit", name: "Creature of Habit", hint: "Complete 7 daily quests." }
-];
+  {
+    id: 'first-blood',
+    name: 'First Blood',
+    hint: 'Complete your first quest.',
+  },
+  {
+    id: 'perfect-day',
+    name: 'Perfect Day',
+    hint: 'End a day with every quest completed.',
+  },
+  { id: 'survivor', name: 'Survivor', hint: 'Keep going at critical HP.' },
+  {
+    id: 'strategist',
+    name: 'Strategist',
+    hint: 'Complete a main, side, and daily quest.',
+  },
+  { id: 'ghost', name: 'Ghost', hint: 'Abandon 3 quests.' },
+  {
+    id: 'chronicler',
+    name: 'Chronicler',
+    hint: 'Generate your first Chronicle.',
+  },
+  {
+    id: 'variety-hero',
+    name: 'Variety Hero',
+    hint: 'Log all three quest types.',
+  },
+  { id: 'on-fire', name: 'On Fire', hint: 'Reach a 3-day streak.' },
+  { id: 'unstoppable', name: 'Unstoppable', hint: 'Reach a 7-day streak.' },
+  { id: 'centurion', name: 'Centurion', hint: 'Complete 100 quests.' },
+  {
+    id: 'creature-of-habit',
+    name: 'Creature of Habit',
+    hint: 'Complete 7 daily quests.',
+  },
+]
 const DEFAULT_GAME = {
   hp: 100,
   xp: 0,
@@ -34,222 +62,250 @@ const DEFAULT_GAME = {
   chronicleCount: 0,
   totalCompletions: 0,
   totalAbandons: 0,
-  completedTypeCounts: { main: 0, side: 0, daily: 0 }
-};
-const DEFAULT_SETTINGS = { apiKey: "", demoMode: true };
+  completedTypeCounts: { main: 0, side: 0, daily: 0 },
+}
+const DEFAULT_SETTINGS = { apiKey: '', demoMode: true }
 
 function readStoredValue(key, fallback) {
   try {
-    const stored = localStorage.getItem(key);
-    return stored ? { ...fallback, ...JSON.parse(stored) } : fallback;
+    const stored = localStorage.getItem(key)
+    return stored ? { ...fallback, ...JSON.parse(stored) } : fallback
   } catch {
-    return fallback;
+    return fallback
   }
 }
 
 function getLevelInfo(xp) {
-  let index = 0;
-  for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) index = i;
-  const current = LEVELS[index];
-  const next = LEVELS[index + 1] || current;
-  const span = Math.max(next.xp - current.xp, 1);
-  const progress = index === LEVELS.length - 1 ? 100 : Math.round(((xp - current.xp) / span) * 100);
-  return { index, title: current.title, nextTitle: next.title, nextXp: next.xp, progress };
+  let index = 0
+  for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) index = i
+  const current = LEVELS[index]
+  const next = LEVELS[index + 1] || current
+  const span = Math.max(next.xp - current.xp, 1)
+  const progress =
+    index === LEVELS.length - 1
+      ? 100
+      : Math.round(((xp - current.xp) / span) * 100)
+  return {
+    index,
+    title: current.title,
+    nextTitle: next.title,
+    nextXp: next.xp,
+    progress,
+  }
 }
 
 function getMultiplier(streak) {
-  if (streak >= 7) return 2;
-  if (streak >= 3) return 1.5;
-  return 1;
+  if (streak >= 7) return 2
+  if (streak >= 3) return 1.5
+  return 1
 }
 
 function getWeather(levelIndex) {
-  if (levelIndex >= 6) return ["✨", "⚡", "✨", "⚡"];
-  if (levelIndex >= 3) return ["🌦️", "🏰", "🌙", "🛡️"];
-  return ["☁️", "🌤️", "🌧️", "🪵"];
+  if (levelIndex >= 6) return ['✨', '⚡', '✨', '⚡']
+  if (levelIndex >= 3) return ['🌦️', '🏰', '🌙', '🛡️']
+  return ['☁️', '🌤️', '🌧️', '🪵']
 }
 
 export default function App() {
-  const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState("daily");
-  const [chronicle, setChronicle] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [activeTab, setActiveTab] = useState("quests");
-  const [game, setGame] = useState(() => readStoredValue("questlog-game", DEFAULT_GAME));
+  const [tasks, setTasks] = useState([])
+  const [title, setTitle] = useState('')
+  const [type, setType] = useState('daily')
+  const [chronicle, setChronicle] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [activeTab, setActiveTab] = useState('quests')
+  const [game, setGame] = useState(() =>
+    readStoredValue('questlog-game', DEFAULT_GAME)
+  )
   const [settings, setSettings] = useState(() =>
-    readStoredValue("questlog-settings", DEFAULT_SETTINGS)
-  );
-  const [draftSettings, setDraftSettings] = useState(settings);
-  const [showSettings, setShowSettings] = useState(false);
-  const [levelModal, setLevelModal] = useState(null);
-  const [badgeModal, setBadgeModal] = useState(null);
+    readStoredValue('questlog-settings', DEFAULT_SETTINGS)
+  )
+  const [draftSettings, setDraftSettings] = useState(settings)
+  const [showSettings, setShowSettings] = useState(false)
+  const [levelModal, setLevelModal] = useState(null)
+  const [badgeModal, setBadgeModal] = useState(null)
 
-  const level = useMemo(() => getLevelInfo(game.xp), [game.xp]);
-  const multiplier = getMultiplier(game.streak);
-  const weather = getWeather(level.index);
+  const level = useMemo(() => getLevelInfo(game.xp), [game.xp])
+  const multiplier = getMultiplier(game.streak)
+  const weather = getWeather(level.index)
 
   const stats = useMemo(() => {
-    const completed = tasks.filter((t) => t.status === "completed").length;
-    const abandoned = tasks.filter((t) => t.status === "abandoned").length;
-    const active = tasks.filter((t) => t.status === "active").length;
-    const total = tasks.length;
-    const completionRate = total === 0 ? 0 : Math.round((completed / total) * 100);
-    return { completed, abandoned, active, total, completionRate };
-  }, [tasks]);
+    const completed = tasks.filter((t) => t.status === 'completed').length
+    const abandoned = tasks.filter((t) => t.status === 'abandoned').length
+    const active = tasks.filter((t) => t.status === 'active').length
+    const total = tasks.length
+    const completionRate =
+      total === 0 ? 0 : Math.round((completed / total) * 100)
+    return { completed, abandoned, active, total, completionRate }
+  }, [tasks])
 
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    fetchTasks()
+  }, [])
   useEffect(() => {
-    localStorage.setItem("questlog-game", JSON.stringify(game));
-  }, [game]);
+    localStorage.setItem('questlog-game', JSON.stringify(game))
+  }, [game])
   useEffect(() => {
-    localStorage.setItem("questlog-settings", JSON.stringify(settings));
-    setDraftSettings(settings);
-  }, [settings]);
+    localStorage.setItem('questlog-settings', JSON.stringify(settings))
+    setDraftSettings(settings)
+  }, [settings])
 
   async function fetchTasks() {
     try {
-      setError("");
-      const r = await fetch(`${API_URL}/tasks`);
-      if (!r.ok) throw new Error("Could not load quests.");
-      setTasks(await r.json());
+      setError('')
+      const r = await fetch(`${API_URL}/tasks`)
+      if (!r.ok) throw new Error('Could not load quests.')
+      setTasks(await r.json())
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     }
   }
 
   function evaluateBadges(nextGame, nextTasks) {
-    const completed = nextTasks.filter((t) => t.status === "completed");
-    const abandoned = nextTasks.filter((t) => t.status === "abandoned");
-    const hasType = (qt) => nextTasks.some((t) => t.type === qt);
-    const completedType = (qt) => completed.some((t) => t.type === qt);
-    const earned = new Set(nextGame.badges);
+    const completed = nextTasks.filter((t) => t.status === 'completed')
+    const abandoned = nextTasks.filter((t) => t.status === 'abandoned')
+    const hasType = (qt) => nextTasks.some((t) => t.type === qt)
+    const completedType = (qt) => completed.some((t) => t.type === qt)
+    const earned = new Set(nextGame.badges)
 
-    if (nextGame.totalCompletions >= 1) earned.add("first-blood");
-    if (nextGame.hp <= 35) earned.add("survivor");
-    if (abandoned.length >= 3 || nextGame.totalAbandons >= 3) earned.add("ghost");
-    if (nextGame.chronicleCount >= 1) earned.add("chronicler");
-    if (nextGame.streak >= 3) earned.add("on-fire");
-    if (nextGame.streak >= 7) earned.add("unstoppable");
-    if (nextGame.totalCompletions >= 100) earned.add("centurion");
-    if (nextGame.completedTypeCounts.daily >= 7) earned.add("creature-of-habit");
-    if (["main", "side", "daily"].every(completedType)) earned.add("strategist");
-    if (["main", "side", "daily"].every(hasType)) earned.add("variety-hero");
-    if (nextTasks.length > 0 && completed.length === nextTasks.length) earned.add("perfect-day");
+    if (nextGame.totalCompletions >= 1) earned.add('first-blood')
+    if (nextGame.hp <= 35) earned.add('survivor')
+    if (abandoned.length >= 3 || nextGame.totalAbandons >= 3)
+      earned.add('ghost')
+    if (nextGame.chronicleCount >= 1) earned.add('chronicler')
+    if (nextGame.streak >= 3) earned.add('on-fire')
+    if (nextGame.streak >= 7) earned.add('unstoppable')
+    if (nextGame.totalCompletions >= 100) earned.add('centurion')
+    if (nextGame.completedTypeCounts.daily >= 7) earned.add('creature-of-habit')
+    if (['main', 'side', 'daily'].every(completedType)) earned.add('strategist')
+    if (['main', 'side', 'daily'].every(hasType)) earned.add('variety-hero')
+    if (nextTasks.length > 0 && completed.length === nextTasks.length)
+      earned.add('perfect-day')
 
-    const newBadges = [...earned].filter((b) => !nextGame.badges.includes(b));
-    return { ...nextGame, badges: [...earned], newBadges };
+    const newBadges = [...earned].filter((b) => !nextGame.badges.includes(b))
+    return { ...nextGame, badges: [...earned], newBadges }
   }
 
   function commitGame(nextGame, nextTasks) {
-    const checked = evaluateBadges(nextGame, nextTasks);
-    const { newBadges, ...gameWithoutMeta } = checked;
-    setGame(gameWithoutMeta);
+    const checked = evaluateBadges(nextGame, nextTasks)
+    const { newBadges, ...gameWithoutMeta } = checked
+    setGame(gameWithoutMeta)
     if (newBadges.length > 0) {
-      setBadgeModal(BADGES.find((b) => b.id === newBadges[0]));
+      setBadgeModal(BADGES.find((b) => b.id === newBadges[0]))
     }
   }
 
   async function addTask(e) {
-    e.preventDefault();
-    const trimmed = title.trim();
-    if (!trimmed) return;
+    e.preventDefault()
+    const trimmed = title.trim()
+    if (!trimmed) return
     try {
-      setError("");
+      setError('')
       const r = await fetch(`${API_URL}/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: trimmed, type })
-      });
-      if (!r.ok) throw new Error("Could not add quest.");
-      const newTask = await r.json();
-      const nextTasks = [...tasks, newTask];
-      setTasks(nextTasks);
-      commitGame(game, nextTasks);
-      setTitle("");
-      setChronicle("");
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: trimmed, type }),
+      })
+      if (!r.ok) throw new Error('Could not add quest.')
+      const newTask = await r.json()
+      const nextTasks = [...tasks, newTask]
+      setTasks(nextTasks)
+      commitGame(game, nextTasks)
+      setTitle('')
+      setChronicle('')
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     }
   }
 
   async function updateTaskStatus(id, status) {
-    const task = tasks.find((t) => t.id === id);
-    if (!task || task.status !== "active") return;
+    const task = tasks.find((t) => t.id === id)
+    if (!task || task.status !== 'active') return
     try {
-      setError("");
+      setError('')
       const r = await fetch(`${API_URL}/tasks/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status })
-      });
-      if (!r.ok) throw new Error("Could not update quest.");
-      const updated = await r.json();
-      const nextTasks = tasks.map((t) => (t.id === id ? updated : t));
-      const prevLevel = getLevelInfo(game.xp).index;
-      const gainedXp = status === "completed" ? Math.round(XP_REWARD[task.type] * multiplier) : 0;
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      })
+      if (!r.ok) throw new Error('Could not update quest.')
+      const updated = await r.json()
+      const nextTasks = tasks.map((t) => (t.id === id ? updated : t))
+      const prevLevel = getLevelInfo(game.xp).index
+      const gainedXp =
+        status === 'completed'
+          ? Math.round(XP_REWARD[task.type] * multiplier)
+          : 0
       const nextGame = {
         ...game,
-        hp: status === "abandoned" ? Math.max(0, game.hp - HP_DAMAGE[task.type]) : game.hp,
+        hp:
+          status === 'abandoned'
+            ? Math.max(0, game.hp - HP_DAMAGE[task.type])
+            : game.hp,
         xp: game.xp + gainedXp,
-        totalCompletions: game.totalCompletions + (status === "completed" ? 1 : 0),
-        totalAbandons: game.totalAbandons + (status === "abandoned" ? 1 : 0),
+        totalCompletions:
+          game.totalCompletions + (status === 'completed' ? 1 : 0),
+        totalAbandons: game.totalAbandons + (status === 'abandoned' ? 1 : 0),
         completedTypeCounts:
-          status === "completed"
-            ? { ...game.completedTypeCounts, [task.type]: game.completedTypeCounts[task.type] + 1 }
-            : game.completedTypeCounts
-      };
-      const nextLevel = getLevelInfo(nextGame.xp);
-      setTasks(nextTasks);
-      commitGame(nextGame, nextTasks);
-      setChronicle("");
-      if (nextLevel.index > prevLevel) setLevelModal(nextLevel);
+          status === 'completed'
+            ? {
+                ...game.completedTypeCounts,
+                [task.type]: game.completedTypeCounts[task.type] + 1,
+              }
+            : game.completedTypeCounts,
+      }
+      const nextLevel = getLevelInfo(nextGame.xp)
+      setTasks(nextTasks)
+      commitGame(nextGame, nextTasks)
+      setChronicle('')
+      if (nextLevel.index > prevLevel) setLevelModal(nextLevel)
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     }
   }
 
   async function generateChronicle() {
-    const streakEarned = stats.completed > 0;
+    const streakEarned = stats.completed > 0
     const nextGame = {
       ...game,
       streak: streakEarned ? game.streak + 1 : 0,
-      chronicleCount: game.chronicleCount + 1
-    };
-    const checkedGame = evaluateBadges(nextGame, tasks);
-    const gameState = { ...checkedGame, title: level.title, completionRate: stats.completionRate };
+      chronicleCount: game.chronicleCount + 1,
+    }
+    const checkedGame = evaluateBadges(nextGame, tasks)
+    const gameState = {
+      ...checkedGame,
+      title: level.title,
+      completionRate: stats.completionRate,
+    }
     try {
-      setIsLoading(true);
-      setError("");
-      if (settings.demoMode) await new Promise((r) => setTimeout(r, 900));
+      setIsLoading(true)
+      setError('')
+      if (settings.demoMode) await new Promise((r) => setTimeout(r, 900))
       const r = await fetch(`${API_URL}/chronicle`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tasks,
           gameState,
           apiKey: settings.apiKey,
-          demoMode: settings.demoMode
-        })
-      });
-      if (!r.ok) throw new Error("Could not generate the Daily Chronicle.");
-      const data = await r.json();
-      setChronicle(data.story);
-      commitGame(nextGame, tasks);
+          demoMode: settings.demoMode,
+        }),
+      })
+      if (!r.ok) throw new Error('Could not generate the Daily Chronicle.')
+      const data = await r.json()
+      setChronicle(data.story)
+      commitGame(nextGame, tasks)
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
   function saveSettings(e) {
-    e.preventDefault();
-    setSettings(draftSettings);
-    setShowSettings(false);
+    e.preventDefault()
+    setSettings(draftSettings)
+    setShowSettings(false)
   }
 
   return (
@@ -261,7 +317,11 @@ export default function App() {
           <h1 className="pixel">Questlog</h1>
         </div>
         <div className="top-bar-right">
-          <button className="icon-button" type="button" onClick={() => setShowSettings(true)}>
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => setShowSettings(true)}
+          >
             ⚙️ Settings
           </button>
         </div>
@@ -272,7 +332,7 @@ export default function App() {
         <div className="main-column">
           {/* Hero banner */}
           <div className="hero-banner">
-            <div className="weather-line">{weather.join(" ")}</div>
+            <div className="weather-line">{weather.join(' ')}</div>
             <p className="pixel-kicker">Your adventure awaits</p>
             <h2>Your tasks are already a story.</h2>
             <p>Questlog just tells it.</p>
@@ -281,16 +341,16 @@ export default function App() {
           {/* Tabs */}
           <nav className="tab-bar">
             <button
-              className={activeTab === "quests" ? "active" : ""}
+              className={activeTab === 'quests' ? 'active' : ''}
               type="button"
-              onClick={() => setActiveTab("quests")}
+              onClick={() => setActiveTab('quests')}
             >
               Quests
             </button>
             <button
-              className={activeTab === "badges" ? "active" : ""}
+              className={activeTab === 'badges' ? 'active' : ''}
               type="button"
-              onClick={() => setActiveTab("badges")}
+              onClick={() => setActiveTab('badges')}
             >
               Badges {game.badges.length}/11
             </button>
@@ -298,7 +358,7 @@ export default function App() {
 
           {error && <p className="error-message">{error}</p>}
 
-          {activeTab === "quests" ? (
+          {activeTab === 'quests' ? (
             <>
               <form className="quest-form" onSubmit={addTask}>
                 <input
@@ -347,24 +407,34 @@ export default function App() {
                     </div>
                   ) : (
                     tasks.map((task) => (
-                      <article className={`quest-card ${task.status}`} key={task.id}>
+                      <article
+                        className={`quest-card ${task.status}`}
+                        key={task.id}
+                      >
                         <div className="quest-copy">
-                          <span className={`type-pill ${task.type}`}>{QUEST_TYPES[task.type]}</span>
+                          <span className={`type-pill ${task.type}`}>
+                            {QUEST_TYPES[task.type]}
+                          </span>
                           <h2>{task.title}</h2>
                           <p>{task.status}</p>
                         </div>
-                        {task.status === "active" && (
+                        {task.status === 'active' && (
                           <div className="quest-actions">
                             <button
                               type="button"
-                              onClick={() => updateTaskStatus(task.id, "completed")}
+                              onClick={() =>
+                                updateTaskStatus(task.id, 'completed')
+                              }
                             >
-                              +{Math.round(XP_REWARD[task.type] * multiplier)} XP
+                              +{Math.round(XP_REWARD[task.type] * multiplier)}{' '}
+                              XP
                             </button>
                             <button
                               className="danger-button"
                               type="button"
-                              onClick={() => updateTaskStatus(task.id, "abandoned")}
+                              onClick={() =>
+                                updateTaskStatus(task.id, 'abandoned')
+                              }
                             >
                               -{HP_DAMAGE[task.type]} HP
                             </button>
@@ -378,9 +448,16 @@ export default function App() {
                 <aside className="chronicle-panel">
                   <p className="pixel-kicker">Daily Chronicle</p>
                   <h2>End Day</h2>
-                  <p>Uses HP, level, streak, and completion rate to set the narrator tone.</p>
-                  <button type="button" onClick={generateChronicle} disabled={isLoading}>
-                    {isLoading ? "Writing..." : "Generate Chronicle →"}
+                  <p>
+                    Uses HP, level, streak, and completion rate to set the
+                    narrator tone.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={generateChronicle}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Writing...' : 'Generate Chronicle →'}
                   </button>
                   {chronicle && <blockquote>{chronicle}</blockquote>}
                 </aside>
@@ -389,14 +466,17 @@ export default function App() {
           ) : (
             <section className="badge-wall">
               {BADGES.map((badge) => {
-                const earned = game.badges.includes(badge.id);
+                const earned = game.badges.includes(badge.id)
                 return (
-                  <article className={`badge-card ${earned ? "earned" : "locked"}`} key={badge.id}>
-                    <span>{earned ? "🏅" : "🔒"}</span>
+                  <article
+                    className={`badge-card ${earned ? 'earned' : 'locked'}`}
+                    key={badge.id}
+                  >
+                    <span>{earned ? '🏅' : '🔒'}</span>
                     <h2>{badge.name}</h2>
                     <p>{badge.hint}</p>
                   </article>
-                );
+                )
               })}
             </section>
           )}
@@ -450,7 +530,9 @@ export default function App() {
           </div>
 
           {/* HP */}
-          <article className={`hud-card hp-card ${game.hp <= 35 ? "critical" : ""}`}>
+          <article
+            className={`hud-card hp-card ${game.hp <= 35 ? 'critical' : ''}`}
+          >
             <div className="hud-label">
               <span>HP</span>
               <strong>{game.hp}/100</strong>
@@ -471,7 +553,7 @@ export default function App() {
             </div>
             <small>
               {level.index === LEVELS.length - 1
-                ? "Max title reached"
+                ? 'Max title reached'
                 : `${level.nextXp - game.xp} XP to ${level.nextTitle}`}
             </small>
           </article>
@@ -495,19 +577,30 @@ export default function App() {
                 type="password"
                 value={draftSettings.apiKey}
                 placeholder="sk-ant-..."
-                onChange={(e) => setDraftSettings({ ...draftSettings, apiKey: e.target.value })}
+                onChange={(e) =>
+                  setDraftSettings({ ...draftSettings, apiKey: e.target.value })
+                }
               />
             </label>
             <label className="toggle-row">
               <input
                 type="checkbox"
                 checked={draftSettings.demoMode}
-                onChange={(e) => setDraftSettings({ ...draftSettings, demoMode: e.target.checked })}
+                onChange={(e) =>
+                  setDraftSettings({
+                    ...draftSettings,
+                    demoMode: e.target.checked,
+                  })
+                }
               />
               Use mock chronicle
             </label>
             <div className="modal-actions">
-              <button type="button" className="plain-button" onClick={() => setShowSettings(false)}>
+              <button
+                type="button"
+                className="plain-button"
+                onClick={() => setShowSettings(false)}
+              >
                 Cancel
               </button>
               <button type="submit">Save</button>
@@ -522,7 +615,9 @@ export default function App() {
           <div className="modal-card">
             <p className="pixel-kicker">Level Up</p>
             <h2>{levelModal.title}</h2>
-            <p>Your title has evolved. The world looks a little different now.</p>
+            <p>
+              Your title has evolved. The world looks a little different now.
+            </p>
             <button type="button" onClick={() => setLevelModal(null)}>
               Continue
             </button>
@@ -544,5 +639,5 @@ export default function App() {
         </div>
       )}
     </main>
-  );
+  )
 }
