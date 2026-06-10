@@ -1,6 +1,7 @@
 # Contributing to Questlog
 
 Thank you for your interest in contributing to Questlog.
+Thanks for your interest in contributing to Questlog.
 
 ## Development Setup
 
@@ -17,6 +18,11 @@ Thank you for your interest in contributing to Questlog.
 - Test changes before submitting
 - Ensure documentation is updated
 
+* Create a feature branch
+* Write clear commit messages
+* Test changes before submitting
+* Ensure documentation is updated
+
 ## Reporting Issues
 
 Please include:
@@ -25,3 +31,7 @@ Please include:
 - Actual behavior
 - Steps to reproduce
 - Screenshots if applicable
+
+## Questions?
+
+Open an issue or start a discussion. Happy questing. ⚔️
