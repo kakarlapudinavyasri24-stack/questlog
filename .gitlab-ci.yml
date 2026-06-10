@@ -14,7 +14,6 @@ default:
       files:
         - package.json
         - frontend/package-lock.json
-        - backend/package-lock.json
     paths:
       - node_modules/
       - frontend/node_modules/
