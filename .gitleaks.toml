@@ -15,4 +15,5 @@ regexes = [
   '''your-api-key-here''',
   '''change-me''',
   '''vaniya\.fatma06@gmail\.com'''
+  '''YOUR_TOKEN'''
 ]
