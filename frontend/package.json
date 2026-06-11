@@ -25,21 +25,12 @@
     "vite": "^8.0.16"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9.8.0",
     "eslint-plugin-react": "^7.37.5",
-    "prettier": "^2.8.8",
-    "biome": "^0.3.3",
+    "knip": "^6.16.1",
     "oxlint": "^1.69.0",
-    "knip": "^1.4.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^13.2.0"
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
-  "prepare": "husky install"
+    "prettier": "^2.8.8"
+  }
 }

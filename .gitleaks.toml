@@ -13,5 +13,7 @@ paths = [
 regexes = [
   '''sk-ant-\.\.\.''',
   '''your-api-key-here''',
-  '''change-me'''
+  '''change-me''',
+  '''vaniya\.fatma06@gmail\.com''',
+  '''YOUR_TOKEN'''
 ]
