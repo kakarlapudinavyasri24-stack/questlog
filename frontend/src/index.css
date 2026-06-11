@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;600;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Noto+Sans+Devanagari:wght@400;700;900&family=Noto+Sans+Telugu:wght@400;700;900&family=Press+Start+2P&display=swap');
 
 :root {
   --bg-deep: #080e1f;
@@ -750,11 +750,42 @@ blockquote {
 }
 
 /* ── Localisation additions ──────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700;900&display=swap');
-
 :lang(hi),
 [lang='hi'] {
   font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-body);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.language-switcher span {
+  color: var(--text-dim);
+}
+
+.language-switcher select {
+  width: auto;
+  min-height: 40px;
+  padding: 0 34px 0 12px;
+  border-color: var(--border-lit);
+  background: var(--bg-card2);
+  color: var(--text-head);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.language-switcher select:focus {
+  border-color: var(--gold);
+}
+
+:lang(te),
+[lang='te'] {
+  font-family: 'Noto Sans Telugu', 'Inter', sans-serif;
 }
 
 .lang-toggle {

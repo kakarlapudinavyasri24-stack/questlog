@@ -1,0 +1,165 @@
+{
+  "app": {
+    "name": "QuestLog"
+  },
+  "appTitle": "QuestLog",
+  "reportIssue": "Report an Issue",
+  "trackIssues": "Track Issues",
+  "login": "Log In",
+  "signup": "Sign Up",
+  "languages": {
+    "en": "English",
+    "hi": "Hindi",
+    "te": "Telugu"
+  },
+  "languageSwitcher": {
+    "label": "Language",
+    "ariaLabel": "Select language"
+  },
+  "settings": {
+    "button": "Settings",
+    "title": "Settings",
+    "apiKeyLabel": "Claude API Key",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "mockLabel": "Use mock Chronicle",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "hero": {
+    "kicker": "Your adventure awaits",
+    "tagline": "Tasks are boring. Quests are not."
+  },
+  "tabs": {
+    "quests": "Quests",
+    "badges": "Badges",
+    "badgesWithCount": "Badges {{count}}/11"
+  },
+  "form": {
+    "titleAriaLabel": "Quest title",
+    "typeAriaLabel": "Quest type",
+    "titlePlaceholder": "Name your quest...",
+    "addQuest": "Add Quest"
+  },
+  "questTypes": {
+    "main": "Main quest",
+    "side": "Side quest",
+    "daily": "Daily quest"
+  },
+  "status": {
+    "active": "Active",
+    "completed": "Completed",
+    "abandoned": "Abandoned"
+  },
+  "stats": {
+    "ariaLabel": "Quest stats",
+    "total": "Total",
+    "completed": "Completed",
+    "abandoned": "Abandoned",
+    "rate": "Rate"
+  },
+  "quests": {
+    "listAriaLabel": "Task list"
+  },
+  "empty": {
+    "title": "No quests yet",
+    "body": "Write the first task and begin the run."
+  },
+  "chronicle": {
+    "kicker": "Daily Chronicle",
+    "title": "End Day",
+    "description": "Uses HP, level, streak, and completion rate to set the narrator tone.",
+    "generate": "Generate Chronicle",
+    "generating": "Writing..."
+  },
+  "actions": {
+    "complete": "+{{xp}} XP",
+    "abandon": "-{{hp}} HP"
+  },
+  "profile": {
+    "name": "Hero",
+    "view": "View Profile",
+    "stats": {
+      "xp": "Total XP",
+      "badges": "Badges",
+      "streak": "Day streak",
+      "completed": "Completed"
+    }
+  },
+  "hud": {
+    "hp": "HP",
+    "xpValue": "XP {{xp}}",
+    "maxTitle": "Max title reached",
+    "xpToNext": "{{xp}} XP to {{title}}",
+    "multiplier": "{{multiplier}}x XP multiplier"
+  },
+  "levels": {
+    "wanderer": "Wanderer",
+    "scout": "Scout",
+    "adventurer": "Adventurer",
+    "knight": "Knight",
+    "champion": "Champion",
+    "legend": "Legend",
+    "mythic": "Mythic"
+  },
+  "levelUp": {
+    "kicker": "Level Up",
+    "body": "Your title has evolved. The world looks a little different now.",
+    "continue": "Continue"
+  },
+  "badgeModal": {
+    "kicker": "Badge Unlocked",
+    "claim": "Claim"
+  },
+  "badges": {
+    "first-blood": {
+      "name": "First Blood",
+      "hint": "Complete your first quest."
+    },
+    "perfect-day": {
+      "name": "Perfect Day",
+      "hint": "End a day with every quest completed."
+    },
+    "survivor": {
+      "name": "Survivor",
+      "hint": "Keep going at critical HP."
+    },
+    "strategist": {
+      "name": "Strategist",
+      "hint": "Complete a main, side, and daily quest."
+    },
+    "ghost": {
+      "name": "Ghost",
+      "hint": "Abandon 3 quests."
+    },
+    "chronicler": {
+      "name": "Chronicler",
+      "hint": "Generate your first Chronicle."
+    },
+    "variety-hero": {
+      "name": "Variety Hero",
+      "hint": "Log all three quest types."
+    },
+    "on-fire": {
+      "name": "On Fire",
+      "hint": "Reach a 3-day streak."
+    },
+    "unstoppable": {
+      "name": "Unstoppable",
+      "hint": "Reach a 7-day streak."
+    },
+    "centurion": {
+      "name": "Centurion",
+      "hint": "Complete 100 quests."
+    },
+    "creature-of-habit": {
+      "name": "Creature of Habit",
+      "hint": "Complete 7 daily quests."
+    }
+  },
+  "errors": {
+    "loadQuests": "Could not load quests.",
+    "addQuest": "Could not add quest.",
+    "updateQuest": "Could not update quest.",
+    "generateChronicle": "Could not generate the Daily Chronicle."
+  }
+}

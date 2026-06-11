@@ -1,169 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import LanguageSwitcher from './components/LanguageSwitcher'
 
 const API_URL = 'http://localhost:4000'
-
-// ── Translations ──────────────────────────────────────────────────────────────
-const TRANSLATIONS = {
-  en: {
-    appName: 'Questlog',
-    tagline: "Tasks are boring. Quests aren't.",
-    settings: '⚙️ Settings',
-    quests: 'Quests',
-    badges: 'Badges',
-    addQuest: '+ Add Quest',
-    namePlaceholder: 'Name your quest...',
-    questTypes: {
-      main: 'Main quest',
-      side: 'Side quest',
-      daily: 'Daily quest',
-    },
-    questOptions: {
-      main: 'Main quest',
-      side: 'Side quest',
-      daily: 'Daily quest',
-    },
-    stats: {
-      total: 'Total',
-      completed: 'Completed',
-      abandoned: 'Abandoned',
-      rate: 'Rate',
-    },
-    emptyTitle: 'No quests yet',
-    emptyBody: 'Write the first task and start the run.',
-    chronicleKicker: 'Daily Chronicle',
-    chronicleTitle: 'End Day',
-    chronicleDesc:
-      'Uses HP, level, streak, and completion rate to set the narrator tone.',
-    generateBtn: 'Generate Chronicle →',
-    generating: 'Writing...',
-    levelUp: 'Level Up',
-    levelUpBody:
-      'Your title has evolved. The world looks a little different now.',
-    continueBtn: 'Continue',
-    badgeUnlocked: 'Badge Unlocked',
-    claimBtn: 'Claim',
-    viewProfile: 'View Profile',
-    apiKeyLabel: 'Claude API Key',
-    mockLabel: 'Use mock chronicle',
-    saveBtn: 'Save',
-    cancelBtn: 'Cancel',
-    hpLabel: 'HP',
-    maxTitle: 'Max title reached',
-    xpTo: 'XP to',
-    multiplier: 'x XP multiplier',
-    statLabels: {
-      xp: 'Total XP',
-      badges: 'Badges',
-      streak: 'Day streak',
-      completed: 'Completed',
-    },
-    abandon: (hp) => `-${hp} HP`,
-    complete: (xp) => `+${xp} XP`,
-    badgeCount: (n) => `${n}/11`,
-    xpToNext: (xp, title) => `${xp} XP to ${title}`,
-  },
-  hi: {
-    appName: 'क्वेस्टलॉग',
-    tagline: 'काम बोरिंग होते हैं। क्वेस्ट नहीं।',
-    settings: '⚙️ सेटिंग्स',
-    quests: 'क्वेस्ट',
-    badges: 'बैज',
-    addQuest: '+ क्वेस्ट जोड़ें',
-    namePlaceholder: 'अपनी क्वेस्ट का नाम लिखें...',
-    questTypes: {
-      main: 'मुख्य क्वेस्ट',
-      side: 'साइड क्वेस्ट',
-      daily: 'दैनिक क्वेस्ट',
-    },
-    questOptions: {
-      main: 'मुख्य क्वेस्ट',
-      side: 'साइड क्वेस्ट',
-      daily: 'दैनिक क्वेस्ट',
-    },
-    stats: { total: 'कुल', completed: 'पूर्ण', abandoned: 'छोड़ा', rate: 'दर' },
-    emptyTitle: 'अभी कोई क्वेस्ट नहीं',
-    emptyBody: 'पहला काम लिखें और शुरुआत करें।',
-    chronicleKicker: 'दैनिक वृत्तांत',
-    chronicleTitle: 'दिन समाप्त करें',
-    chronicleDesc:
-      'HP, स्तर, स्ट्रीक और पूर्णता दर के आधार पर कथा तैयार होती है।',
-    generateBtn: 'वृत्तांत बनाएं →',
-    generating: 'लिख रहे हैं...',
-    levelUp: 'स्तर बढ़ा!',
-    levelUpBody: 'आपका खिताब बदल गया। दुनिया अब थोड़ी अलग दिखती है।',
-    continueBtn: 'आगे बढ़ें',
-    badgeUnlocked: 'बैज मिला!',
-    claimBtn: 'प्राप्त करें',
-    viewProfile: 'प्रोफ़ाइल देखें',
-    apiKeyLabel: 'Claude API Key',
-    mockLabel: 'नकली वृत्तांत उपयोग करें',
-    saveBtn: 'सहेजें',
-    cancelBtn: 'रद्द करें',
-    hpLabel: 'HP',
-    maxTitle: 'अधिकतम स्तर प्राप्त',
-    xpTo: 'XP चाहिए',
-    multiplier: 'x XP गुणक',
-    statLabels: {
-      xp: 'कुल XP',
-      badges: 'बैज',
-      streak: 'दिन स्ट्रीक',
-      completed: 'पूर्ण',
-    },
-    abandon: (hp) => `-${hp} HP`,
-    complete: (xp) => `+${xp} XP`,
-    badgeCount: (n) => `${n}/11`,
-    xpToNext: (xp, title) => `${xp} XP → ${title}`,
-  },
-}
 
 // ── Game constants ────────────────────────────────────────────────────────────
 const XP_REWARD = { main: 45, side: 30, daily: 20 }
 const HP_DAMAGE = { main: 25, side: 15, daily: 10 }
 const LEVELS = [
-  { title: 'Wanderer', xp: 0 },
-  { title: 'Scout', xp: 100 },
-  { title: 'Adventurer', xp: 250 },
-  { title: 'Knight', xp: 450 },
-  { title: 'Champion', xp: 700 },
-  { title: 'Legend', xp: 1000 },
-  { title: 'Mythic', xp: 1400 },
+  { id: 'wanderer', xp: 0 },
+  { id: 'scout', xp: 100 },
+  { id: 'adventurer', xp: 250 },
+  { id: 'knight', xp: 450 },
+  { id: 'champion', xp: 700 },
+  { id: 'legend', xp: 1000 },
+  { id: 'mythic', xp: 1400 },
 ]
 const BADGES = [
-  {
-    id: 'first-blood',
-    name: 'First Blood',
-    hint: 'Complete your first quest.',
-  },
-  {
-    id: 'perfect-day',
-    name: 'Perfect Day',
-    hint: 'End a day with every quest completed.',
-  },
-  { id: 'survivor', name: 'Survivor', hint: 'Keep going at critical HP.' },
-  {
-    id: 'strategist',
-    name: 'Strategist',
-    hint: 'Complete a main, side, and daily quest.',
-  },
-  { id: 'ghost', name: 'Ghost', hint: 'Abandon 3 quests.' },
-  {
-    id: 'chronicler',
-    name: 'Chronicler',
-    hint: 'Generate your first Chronicle.',
-  },
-  {
-    id: 'variety-hero',
-    name: 'Variety Hero',
-    hint: 'Log all three quest types.',
-  },
-  { id: 'on-fire', name: 'On Fire', hint: 'Reach a 3-day streak.' },
-  { id: 'unstoppable', name: 'Unstoppable', hint: 'Reach a 7-day streak.' },
-  { id: 'centurion', name: 'Centurion', hint: 'Complete 100 quests.' },
-  {
-    id: 'creature-of-habit',
-    name: 'Creature of Habit',
-    hint: 'Complete 7 daily quests.',
-  },
+  { id: 'first-blood' },
+  { id: 'perfect-day' },
+  { id: 'survivor' },
+  { id: 'strategist' },
+  { id: 'ghost' },
+  { id: 'chronicler' },
+  { id: 'variety-hero' },
+  { id: 'on-fire' },
+  { id: 'unstoppable' },
+  { id: 'centurion' },
+  { id: 'creature-of-habit' },
 ]
 const DEFAULT_GAME = {
   hp: 100,
@@ -199,8 +63,8 @@ function getLevelInfo(xp) {
       : Math.round(((xp - current.xp) / span) * 100)
   return {
     index,
-    title: current.title,
-    nextTitle: next.title,
+    id: current.id,
+    nextId: next.id,
     nextXp: next.xp,
     progress,
   }
@@ -220,6 +84,7 @@ function getWeather(levelIndex) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  const { i18n, t } = useTranslation()
   const [tasks, setTasks] = useState([])
   const [title, setTitle] = useState('')
   const [type, setType] = useState('daily')
@@ -227,9 +92,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('quests')
-  const [lang, setLang] = useState(
-    () => localStorage.getItem('questlog-lang') || 'en'
-  )
   const [game, setGame] = useState(() =>
     readStoredValue('questlog-game', DEFAULT_GAME)
   )
@@ -241,10 +103,11 @@ export default function App() {
   const [levelModal, setLevelModal] = useState(null)
   const [badgeModal, setBadgeModal] = useState(null)
 
-  const t = TRANSLATIONS[lang]
   const level = useMemo(() => getLevelInfo(game.xp), [game.xp])
   const multiplier = getMultiplier(game.streak)
   const weather = getWeather(level.index)
+  const language = i18n.resolvedLanguage || 'en'
+  const levelTitle = t(`levels.${level.id}`)
 
   const stats = useMemo(() => {
     const completed = tasks.filter((t) => t.status === 'completed').length
@@ -263,8 +126,8 @@ export default function App() {
     localStorage.setItem('questlog-game', JSON.stringify(game))
   }, [game])
   useEffect(() => {
-    localStorage.setItem('questlog-lang', lang)
-  }, [lang])
+    document.documentElement.lang = language
+  }, [language])
   useEffect(() => {
     localStorage.setItem('questlog-settings', JSON.stringify(settings))
     setDraftSettings(settings)
@@ -274,7 +137,7 @@ export default function App() {
     try {
       setError('')
       const r = await fetch(`${API_URL}/tasks`)
-      if (!r.ok) throw new Error('Could not load quests.')
+      if (!r.ok) throw new Error(t('errors.loadQuests'))
       setTasks(await r.json())
     } catch (err) {
       setError(err.message)
@@ -325,7 +188,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: trimmed, type }),
       })
-      if (!r.ok) throw new Error('Could not add quest.')
+      if (!r.ok) throw new Error(t('errors.addQuest'))
       const newTask = await r.json()
       const nextTasks = [...tasks, newTask]
       setTasks(nextTasks)
@@ -347,7 +210,7 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      if (!r.ok) throw new Error('Could not update quest.')
+      if (!r.ok) throw new Error(t('errors.updateQuest'))
       const updated = await r.json()
       const nextTasks = tasks.map((t) => (t.id === id ? updated : t))
       const prevLevel = getLevelInfo(game.xp).index
@@ -393,7 +256,7 @@ export default function App() {
     const checkedGame = evaluateBadges(nextGame, tasks)
     const gameState = {
       ...checkedGame,
-      title: level.title,
+      title: levelTitle,
       completionRate: stats.completionRate,
     }
     try {
@@ -408,10 +271,10 @@ export default function App() {
           gameState,
           apiKey: settings.apiKey,
           demoMode: settings.demoMode,
-          lang,
+          lang: language,
         }),
       })
-      if (!r.ok) throw new Error('Could not generate the Daily Chronicle.')
+      if (!r.ok) throw new Error(t('errors.generateChronicle'))
       const data = await r.json()
       setChronicle(data.story)
       commitGame(nextGame, tasks)
@@ -428,32 +291,22 @@ export default function App() {
     setShowSettings(false)
   }
 
-  function toggleLang() {
-    setLang((l) => (l === 'en' ? 'hi' : 'en'))
-  }
-
   return (
     <main className={`game-shell level-${level.index}`}>
       {/* ── Top Nav ── */}
       <header className="top-bar">
         <div className="brand">
           <div className="brand-coin">⚔</div>
-          <h1 className="pixel">{t.appName}</h1>
+          <h1 className="pixel">{t('app.name')}</h1>
         </div>
         <div className="top-bar-right">
-          <button
-            className="icon-button lang-toggle"
-            type="button"
-            onClick={toggleLang}
-          >
-            {lang === 'en' ? '🇮🇳 हिन्दी' : '🇬🇧 English'}
-          </button>
+          <LanguageSwitcher />
           <button
             className="icon-button"
             type="button"
             onClick={() => setShowSettings(true)}
           >
-            {t.settings}
+            {t('settings.button')}
           </button>
         </div>
       </header>
@@ -464,12 +317,8 @@ export default function App() {
           {/* Hero banner */}
           <div className="hero-banner">
             <div className="weather-line">{weather.join(' ')}</div>
-            <p className="pixel-kicker">
-              {lang === 'en'
-                ? 'Your adventure awaits'
-                : 'आपका साहसिक सफर शुरू होता है'}
-            </p>
-            <h2>{t.tagline}</h2>
+            <p className="pixel-kicker">{t('hero.kicker')}</p>
+            <h2>{t('hero.tagline')}</h2>
           </div>
 
           {/* Tabs */}
@@ -479,14 +328,14 @@ export default function App() {
               type="button"
               onClick={() => setActiveTab('quests')}
             >
-              {t.quests}
+              {t('tabs.quests')}
             </button>
             <button
               className={activeTab === 'badges' ? 'active' : ''}
               type="button"
               onClick={() => setActiveTab('badges')}
             >
-              {t.badges} {t.badgeCount(game.badges.length)}
+              {t('tabs.badgesWithCount', { count: game.badges.length })}
             </button>
           </nav>
 
@@ -496,48 +345,51 @@ export default function App() {
             <>
               <form className="quest-form" onSubmit={addTask}>
                 <input
-                  aria-label="Quest title"
-                  placeholder={t.namePlaceholder}
+                  aria-label={t('form.titleAriaLabel')}
+                  placeholder={t('form.titlePlaceholder')}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
                 <select
-                  aria-label="Quest type"
+                  aria-label={t('form.typeAriaLabel')}
                   value={type}
                   onChange={(e) => setType(e.target.value)}
                 >
-                  <option value="main">{t.questOptions.main}</option>
-                  <option value="side">{t.questOptions.side}</option>
-                  <option value="daily">{t.questOptions.daily}</option>
+                  <option value="main">{t('questTypes.main')}</option>
+                  <option value="side">{t('questTypes.side')}</option>
+                  <option value="daily">{t('questTypes.daily')}</option>
                 </select>
-                <button type="submit">{t.addQuest}</button>
+                <button type="submit">{t('form.addQuest')}</button>
               </form>
 
-              <section className="stats-grid" aria-label="Quest stats">
+              <section className="stats-grid" aria-label={t('stats.ariaLabel')}>
                 <article>
                   <span>{stats.total}</span>
-                  <p>{t.stats.total}</p>
+                  <p>{t('stats.total')}</p>
                 </article>
                 <article>
                   <span>{stats.completed}</span>
-                  <p>{t.stats.completed}</p>
+                  <p>{t('stats.completed')}</p>
                 </article>
                 <article>
                   <span>{stats.abandoned}</span>
-                  <p>{t.stats.abandoned}</p>
+                  <p>{t('stats.abandoned')}</p>
                 </article>
                 <article>
                   <span>{stats.completionRate}%</span>
-                  <p>{t.stats.rate}</p>
+                  <p>{t('stats.rate')}</p>
                 </article>
               </section>
 
               <div className="content-grid">
-                <div className="quest-list" aria-label="Task list">
+                <div
+                  className="quest-list"
+                  aria-label={t('quests.listAriaLabel')}
+                >
                   {tasks.length === 0 ? (
                     <div className="empty-state">
-                      <h2>{t.emptyTitle}</h2>
-                      <p>{t.emptyBody}</p>
+                      <h2>{t('empty.title')}</h2>
+                      <p>{t('empty.body')}</p>
                     </div>
                   ) : (
                     tasks.map((task) => (
@@ -547,10 +399,10 @@ export default function App() {
                       >
                         <div className="quest-copy">
                           <span className={`type-pill ${task.type}`}>
-                            {t.questTypes[task.type]}
+                            {t(`questTypes.${task.type}`)}
                           </span>
                           <h2>{task.title}</h2>
-                          <p>{task.status}</p>
+                          <p>{t(`status.${task.status}`)}</p>
                         </div>
                         {task.status === 'active' && (
                           <div className="quest-actions">
@@ -560,9 +412,11 @@ export default function App() {
                                 updateTaskStatus(task.id, 'completed')
                               }
                             >
-                              {t.complete(
-                                Math.round(XP_REWARD[task.type] * multiplier)
-                              )}
+                              {t('actions.complete', {
+                                xp: Math.round(
+                                  XP_REWARD[task.type] * multiplier
+                                ),
+                              })}
                             </button>
                             <button
                               className="danger-button"
@@ -571,7 +425,9 @@ export default function App() {
                                 updateTaskStatus(task.id, 'abandoned')
                               }
                             >
-                              {t.abandon(HP_DAMAGE[task.type])}
+                              {t('actions.abandon', {
+                                hp: HP_DAMAGE[task.type],
+                              })}
                             </button>
                           </div>
                         )}
@@ -581,15 +437,17 @@ export default function App() {
                 </div>
 
                 <aside className="chronicle-panel">
-                  <p className="pixel-kicker">{t.chronicleKicker}</p>
-                  <h2>{t.chronicleTitle}</h2>
-                  <p>{t.chronicleDesc}</p>
+                  <p className="pixel-kicker">{t('chronicle.kicker')}</p>
+                  <h2>{t('chronicle.title')}</h2>
+                  <p>{t('chronicle.description')}</p>
                   <button
                     type="button"
                     onClick={generateChronicle}
                     disabled={isLoading}
                   >
-                    {isLoading ? t.generating : t.generateBtn}
+                    {isLoading
+                      ? t('chronicle.generating')
+                      : t('chronicle.generate')}
                   </button>
                   {chronicle && <blockquote>{chronicle}</blockquote>}
                 </aside>
@@ -605,8 +463,8 @@ export default function App() {
                     key={badge.id}
                   >
                     <span>{earned ? '🏅' : '🔒'}</span>
-                    <h2>{badge.name}</h2>
-                    <p>{badge.hint}</p>
+                    <h2>{t(`badges.${badge.id}.name`)}</h2>
+                    <p>{t(`badges.${badge.id}.hint`)}</p>
                   </article>
                 )
               })}
@@ -620,8 +478,8 @@ export default function App() {
             <div className="profile-top">
               <div className="hero-sprite" aria-hidden="true" />
               <div>
-                <p className="profile-name">Hero</p>
-                <p className="profile-level">{level.title}</p>
+                <p className="profile-name">{t('profile.name')}</p>
+                <p className="profile-level">{levelTitle}</p>
               </div>
             </div>
 
@@ -630,34 +488,40 @@ export default function App() {
                 <span className="stat-icon">⭐</span>
                 <div>
                   <span className="stat-value">{game.xp}</span>
-                  <span className="stat-label">{t.statLabels.xp}</span>
+                  <span className="stat-label">{t('profile.stats.xp')}</span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">🏅</span>
                 <div>
                   <span className="stat-value">{game.badges.length}</span>
-                  <span className="stat-label">{t.statLabels.badges}</span>
+                  <span className="stat-label">
+                    {t('profile.stats.badges')}
+                  </span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">🔥</span>
                 <div>
                   <span className="stat-value">{game.streak}</span>
-                  <span className="stat-label">{t.statLabels.streak}</span>
+                  <span className="stat-label">
+                    {t('profile.stats.streak')}
+                  </span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">⚔️</span>
                 <div>
                   <span className="stat-value">{game.totalCompletions}</span>
-                  <span className="stat-label">{t.statLabels.completed}</span>
+                  <span className="stat-label">
+                    {t('profile.stats.completed')}
+                  </span>
                 </div>
               </div>
             </div>
 
             <button className="wide-button" type="button">
-              {t.viewProfile}
+              {t('profile.view')}
             </button>
           </div>
 
@@ -666,7 +530,7 @@ export default function App() {
             className={`hud-card hp-card ${game.hp <= 35 ? 'critical' : ''}`}
           >
             <div className="hud-label">
-              <span>{t.hpLabel}</span>
+              <span>{t('hud.hp')}</span>
               <strong>{game.hp}/100</strong>
             </div>
             <div className="meter">
@@ -677,26 +541,26 @@ export default function App() {
           {/* XP / Level */}
           <article className="hud-card">
             <div className="hud-label">
-              <span>{level.title}</span>
-              <strong>XP {game.xp}</strong>
+              <span>{levelTitle}</span>
+              <strong>{t('hud.xpValue', { xp: game.xp })}</strong>
             </div>
             <div className="meter xp-meter">
               <span style={{ width: `${level.progress}%` }} />
             </div>
             <small>
               {level.index === LEVELS.length - 1
-                ? t.maxTitle
-                : t.xpToNext(level.nextXp - game.xp, level.nextTitle)}
+                ? t('hud.maxTitle')
+                : t('hud.xpToNext', {
+                    xp: level.nextXp - game.xp,
+                    title: t(`levels.${level.nextId}`),
+                  })}
             </small>
           </article>
 
           {/* Streak */}
           <article className="hud-card streak-card">
             <span>🔥 {game.streak}</span>
-            <p>
-              {multiplier}
-              {t.multiplier}
-            </p>
+            <p>{t('hud.multiplier', { multiplier })}</p>
           </article>
         </aside>
       </div>
@@ -705,13 +569,13 @@ export default function App() {
       {showSettings && (
         <div className="modal-backdrop" role="presentation">
           <form className="modal-card settings-card" onSubmit={saveSettings}>
-            <h2>{t.settings}</h2>
+            <h2>{t('settings.title')}</h2>
             <label>
-              {t.apiKeyLabel}
+              {t('settings.apiKeyLabel')}
               <input
                 type="password"
                 value={draftSettings.apiKey}
-                placeholder="sk-ant-..."
+                placeholder={t('settings.apiKeyPlaceholder')}
                 onChange={(e) =>
                   setDraftSettings({ ...draftSettings, apiKey: e.target.value })
                 }
@@ -728,7 +592,7 @@ export default function App() {
                   })
                 }
               />
-              {t.mockLabel}
+              {t('settings.mockLabel')}
             </label>
             <div className="modal-actions">
               <button
@@ -736,9 +600,9 @@ export default function App() {
                 className="plain-button"
                 onClick={() => setShowSettings(false)}
               >
-                {t.cancelBtn}
+                {t('settings.cancel')}
               </button>
-              <button type="submit">{t.saveBtn}</button>
+              <button type="submit">{t('settings.save')}</button>
             </div>
           </form>
         </div>
@@ -748,11 +612,11 @@ export default function App() {
       {levelModal && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal-card">
-            <p className="pixel-kicker">{t.levelUp}</p>
-            <h2>{levelModal.title}</h2>
-            <p>{t.levelUpBody}</p>
+            <p className="pixel-kicker">{t('levelUp.kicker')}</p>
+            <h2>{t(`levels.${levelModal.id}`)}</h2>
+            <p>{t('levelUp.body')}</p>
             <button type="button" onClick={() => setLevelModal(null)}>
-              {t.continueBtn}
+              {t('levelUp.continue')}
             </button>
           </div>
         </div>
@@ -762,11 +626,11 @@ export default function App() {
       {badgeModal && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal-card">
-            <p className="pixel-kicker">{t.badgeUnlocked}</p>
-            <h2>🏅 {badgeModal.name}</h2>
-            <p>{badgeModal.hint}</p>
+            <p className="pixel-kicker">{t('badgeModal.kicker')}</p>
+            <h2>🏅 {t(`badges.${badgeModal.id}.name`)}</h2>
+            <p>{t(`badges.${badgeModal.id}.hint`)}</p>
             <button type="button" onClick={() => setBadgeModal(null)}>
-              {t.claimBtn}
+              {t('badgeModal.claim')}
             </button>
           </div>
         </div>
