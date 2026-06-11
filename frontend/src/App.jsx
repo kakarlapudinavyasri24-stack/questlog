@@ -1,8 +1,89 @@
 import { useEffect, useMemo, useState } from "react";
 
 const API_URL = "http://localhost:4000";
-const QUEST_TYPES = { main: "Main quest", side: "Side quest", daily: "Daily quest" };
-const XP_REWARD  = { main: 45, side: 30, daily: 20 };
+
+// ── Translations ──────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+  en: {
+    appName: "Questlog",
+    tagline: "Tasks are boring. Quests aren't.",
+    settings: "⚙️ Settings",
+    quests: "Quests",
+    badges: "Badges",
+    addQuest: "+ Add Quest",
+    namePlaceholder: "Name your quest...",
+    questTypes: { main: "Main quest", side: "Side quest", daily: "Daily quest" },
+    questOptions: { main: "Main quest", side: "Side quest", daily: "Daily quest" },
+    stats: { total: "Total", completed: "Completed", abandoned: "Abandoned", rate: "Rate" },
+    emptyTitle: "No quests yet",
+    emptyBody: "Write the first task and start the run.",
+    chronicleKicker: "Daily Chronicle",
+    chronicleTitle: "End Day",
+    chronicleDesc: "Uses HP, level, streak, and completion rate to set the narrator tone.",
+    generateBtn: "Generate Chronicle →",
+    generating: "Writing...",
+    levelUp: "Level Up",
+    levelUpBody: "Your title has evolved. The world looks a little different now.",
+    continueBtn: "Continue",
+    badgeUnlocked: "Badge Unlocked",
+    claimBtn: "Claim",
+    viewProfile: "View Profile",
+    apiKeyLabel: "Claude API Key",
+    mockLabel: "Use mock chronicle",
+    saveBtn: "Save",
+    cancelBtn: "Cancel",
+    hpLabel: "HP",
+    maxTitle: "Max title reached",
+    xpTo: "XP to",
+    multiplier: "x XP multiplier",
+    statLabels: { xp: "Total XP", badges: "Badges", streak: "Day streak", completed: "Completed" },
+    abandon: (hp) => `-${hp} HP`,
+    complete: (xp) => `+${xp} XP`,
+    badgeCount: (n) => `${n}/11`,
+    xpToNext: (xp, title) => `${xp} XP to ${title}`,
+  },
+  hi: {
+    appName: "क्वेस्टलॉग",
+    tagline: "काम बोरिंग होते हैं। क्वेस्ट नहीं।",
+    settings: "⚙️ सेटिंग्स",
+    quests: "क्वेस्ट",
+    badges: "बैज",
+    addQuest: "+ क्वेस्ट जोड़ें",
+    namePlaceholder: "अपनी क्वेस्ट का नाम लिखें...",
+    questTypes: { main: "मुख्य क्वेस्ट", side: "साइड क्वेस्ट", daily: "दैनिक क्वेस्ट" },
+    questOptions: { main: "मुख्य क्वेस्ट", side: "साइड क्वेस्ट", daily: "दैनिक क्वेस्ट" },
+    stats: { total: "कुल", completed: "पूर्ण", abandoned: "छोड़ा", rate: "दर" },
+    emptyTitle: "अभी कोई क्वेस्ट नहीं",
+    emptyBody: "पहला काम लिखें और शुरुआत करें।",
+    chronicleKicker: "दैनिक वृत्तांत",
+    chronicleTitle: "दिन समाप्त करें",
+    chronicleDesc: "HP, स्तर, स्ट्रीक और पूर्णता दर के आधार पर कथा तैयार होती है।",
+    generateBtn: "वृत्तांत बनाएं →",
+    generating: "लिख रहे हैं...",
+    levelUp: "स्तर बढ़ा!",
+    levelUpBody: "आपका खिताब बदल गया। दुनिया अब थोड़ी अलग दिखती है।",
+    continueBtn: "आगे बढ़ें",
+    badgeUnlocked: "बैज मिला!",
+    claimBtn: "प्राप्त करें",
+    viewProfile: "प्रोफ़ाइल देखें",
+    apiKeyLabel: "Claude API Key",
+    mockLabel: "नकली वृत्तांत उपयोग करें",
+    saveBtn: "सहेजें",
+    cancelBtn: "रद्द करें",
+    hpLabel: "HP",
+    maxTitle: "अधिकतम स्तर प्राप्त",
+    xpTo: "XP चाहिए",
+    multiplier: "x XP गुणक",
+    statLabels: { xp: "कुल XP", badges: "बैज", streak: "दिन स्ट्रीक", completed: "पूर्ण" },
+    abandon: (hp) => `-${hp} HP`,
+    complete: (xp) => `+${xp} XP`,
+    badgeCount: (n) => `${n}/11`,
+    xpToNext: (xp, title) => `${xp} XP → ${title}`,
+  },
+};
+
+// ── Game constants ────────────────────────────────────────────────────────────
+const XP_REWARD = { main: 45, side: 30, daily: 20 };
 const HP_DAMAGE  = { main: 25, side: 15, daily: 10 };
 const LEVELS = [
   { title: "Wanderer", xp: 0 },
@@ -14,17 +95,17 @@ const LEVELS = [
   { title: "Mythic",   xp: 1400 },
 ];
 const BADGES = [
-  { id: "first-blood",      name: "First Blood",       hint: "Complete your first quest." },
-  { id: "perfect-day",      name: "Perfect Day",        hint: "End a day with every quest completed." },
-  { id: "survivor",         name: "Survivor",           hint: "Keep going at critical HP." },
-  { id: "strategist",       name: "Strategist",         hint: "Complete a main, side, and daily quest." },
-  { id: "ghost",            name: "Ghost",              hint: "Abandon 3 quests." },
-  { id: "chronicler",       name: "Chronicler",         hint: "Generate your first Chronicle." },
-  { id: "variety-hero",     name: "Variety Hero",       hint: "Log all three quest types." },
-  { id: "on-fire",          name: "On Fire",            hint: "Reach a 3-day streak." },
-  { id: "unstoppable",      name: "Unstoppable",        hint: "Reach a 7-day streak." },
-  { id: "centurion",        name: "Centurion",          hint: "Complete 100 quests." },
-  { id: "creature-of-habit",name: "Creature of Habit",  hint: "Complete 7 daily quests." },
+  { id: "first-blood",       name: "First Blood",        hint: "Complete your first quest." },
+  { id: "perfect-day",       name: "Perfect Day",         hint: "End a day with every quest completed." },
+  { id: "survivor",          name: "Survivor",            hint: "Keep going at critical HP." },
+  { id: "strategist",        name: "Strategist",          hint: "Complete a main, side, and daily quest." },
+  { id: "ghost",             name: "Ghost",               hint: "Abandon 3 quests." },
+  { id: "chronicler",        name: "Chronicler",          hint: "Generate your first Chronicle." },
+  { id: "variety-hero",      name: "Variety Hero",        hint: "Log all three quest types." },
+  { id: "on-fire",           name: "On Fire",             hint: "Reach a 3-day streak." },
+  { id: "unstoppable",       name: "Unstoppable",         hint: "Reach a 7-day streak." },
+  { id: "centurion",         name: "Centurion",           hint: "Complete 100 quests." },
+  { id: "creature-of-habit", name: "Creature of Habit",   hint: "Complete 7 daily quests." },
 ];
 const DEFAULT_GAME = {
   hp: 100, xp: 0, streak: 0, badges: [], chronicleCount: 0,
@@ -33,6 +114,7 @@ const DEFAULT_GAME = {
 };
 const DEFAULT_SETTINGS = { apiKey: "", demoMode: true };
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function readStoredValue(key, fallback) {
   try {
     const stored = localStorage.getItem(key);
@@ -43,9 +125,9 @@ function readStoredValue(key, fallback) {
 function getLevelInfo(xp) {
   let index = 0;
   for (let i = 0; i < LEVELS.length; i++) if (xp >= LEVELS[i].xp) index = i;
-  const current = LEVELS[index];
-  const next    = LEVELS[index + 1] || current;
-  const span    = Math.max(next.xp - current.xp, 1);
+  const current  = LEVELS[index];
+  const next     = LEVELS[index + 1] || current;
+  const span     = Math.max(next.xp - current.xp, 1);
   const progress = index === LEVELS.length - 1 ? 100
     : Math.round(((xp - current.xp) / span) * 100);
   return { index, title: current.title, nextTitle: next.title, nextXp: next.xp, progress };
@@ -63,21 +145,24 @@ function getWeather(levelIndex) {
   return ["☁️", "🌤️", "🌧️", "🪵"];
 }
 
+// ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [tasks,        setTasks]        = useState([]);
-  const [title,        setTitle]        = useState("");
-  const [type,         setType]         = useState("daily");
-  const [chronicle,    setChronicle]    = useState("");
-  const [isLoading,    setIsLoading]    = useState(false);
-  const [error,        setError]        = useState("");
-  const [activeTab,    setActiveTab]    = useState("quests");
-  const [game,         setGame]         = useState(() => readStoredValue("questlog-game", DEFAULT_GAME));
-  const [settings,     setSettings]     = useState(() => readStoredValue("questlog-settings", DEFAULT_SETTINGS));
-  const [draftSettings,setDraftSettings]= useState(settings);
-  const [showSettings, setShowSettings] = useState(false);
-  const [levelModal,   setLevelModal]   = useState(null);
-  const [badgeModal,   setBadgeModal]   = useState(null);
+  const [tasks,         setTasks]         = useState([]);
+  const [title,         setTitle]         = useState("");
+  const [type,          setType]          = useState("daily");
+  const [chronicle,     setChronicle]     = useState("");
+  const [isLoading,     setIsLoading]     = useState(false);
+  const [error,         setError]         = useState("");
+  const [activeTab,     setActiveTab]     = useState("quests");
+  const [lang,          setLang]          = useState(() => localStorage.getItem("questlog-lang") || "en");
+  const [game,          setGame]          = useState(() => readStoredValue("questlog-game", DEFAULT_GAME));
+  const [settings,      setSettings]      = useState(() => readStoredValue("questlog-settings", DEFAULT_SETTINGS));
+  const [draftSettings, setDraftSettings] = useState(settings);
+  const [showSettings,  setShowSettings]  = useState(false);
+  const [levelModal,    setLevelModal]    = useState(null);
+  const [badgeModal,    setBadgeModal]    = useState(null);
 
+  const t          = TRANSLATIONS[lang];
   const level      = useMemo(() => getLevelInfo(game.xp), [game.xp]);
   const multiplier = getMultiplier(game.streak);
   const weather    = getWeather(level.index);
@@ -93,6 +178,7 @@ export default function App() {
 
   useEffect(() => { fetchTasks(); }, []);
   useEffect(() => { localStorage.setItem("questlog-game", JSON.stringify(game)); }, [game]);
+  useEffect(() => { localStorage.setItem("questlog-lang", lang); }, [lang]);
   useEffect(() => {
     localStorage.setItem("questlog-settings", JSON.stringify(settings));
     setDraftSettings(settings);
@@ -108,20 +194,20 @@ export default function App() {
   }
 
   function evaluateBadges(nextGame, nextTasks) {
-    const completed    = nextTasks.filter(t => t.status === "completed");
-    const abandoned    = nextTasks.filter(t => t.status === "abandoned");
-    const hasType      = qt => nextTasks.some(t => t.type === qt);
-    const completedType= qt => completed.some(t => t.type === qt);
-    const earned       = new Set(nextGame.badges);
+    const completed     = nextTasks.filter(t => t.status === "completed");
+    const abandoned     = nextTasks.filter(t => t.status === "abandoned");
+    const hasType       = qt => nextTasks.some(t => t.type === qt);
+    const completedType = qt => completed.some(t => t.type === qt);
+    const earned        = new Set(nextGame.badges);
 
-    if (nextGame.totalCompletions >= 1) earned.add("first-blood");
-    if (nextGame.hp <= 35)              earned.add("survivor");
+    if (nextGame.totalCompletions >= 1)          earned.add("first-blood");
+    if (nextGame.hp <= 35)                        earned.add("survivor");
     if (abandoned.length >= 3 || nextGame.totalAbandons >= 3) earned.add("ghost");
-    if (nextGame.chronicleCount >= 1)   earned.add("chronicler");
-    if (nextGame.streak >= 3)           earned.add("on-fire");
-    if (nextGame.streak >= 7)           earned.add("unstoppable");
-    if (nextGame.totalCompletions >= 100) earned.add("centurion");
-    if (nextGame.completedTypeCounts.daily >= 7) earned.add("creature-of-habit");
+    if (nextGame.chronicleCount >= 1)             earned.add("chronicler");
+    if (nextGame.streak >= 3)                     earned.add("on-fire");
+    if (nextGame.streak >= 7)                     earned.add("unstoppable");
+    if (nextGame.totalCompletions >= 100)         earned.add("centurion");
+    if (nextGame.completedTypeCounts.daily >= 7)  earned.add("creature-of-habit");
     if (["main","side","daily"].every(completedType)) earned.add("strategist");
     if (["main","side","daily"].every(hasType))       earned.add("variety-hero");
     if (nextTasks.length > 0 && completed.length === nextTasks.length) earned.add("perfect-day");
@@ -131,12 +217,10 @@ export default function App() {
   }
 
   function commitGame(nextGame, nextTasks) {
-    const checked      = evaluateBadges(nextGame, nextTasks);
+    const checked = evaluateBadges(nextGame, nextTasks);
     const { newBadges, ...gameWithoutMeta } = checked;
     setGame(gameWithoutMeta);
-    if (newBadges.length > 0) {
-      setBadgeModal(BADGES.find(b => b.id === newBadges[0]));
-    }
+    if (newBadges.length > 0) setBadgeModal(BADGES.find(b => b.id === newBadges[0]));
   }
 
   async function addTask(e) {
@@ -205,7 +289,7 @@ export default function App() {
       const r = await fetch(`${API_URL}/chronicle`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tasks, gameState, apiKey: settings.apiKey, demoMode: settings.demoMode }),
+        body: JSON.stringify({ tasks, gameState, apiKey: settings.apiKey, demoMode: settings.demoMode, lang }),
       });
       if (!r.ok) throw new Error("Could not generate the Daily Chronicle.");
       const data = await r.json();
@@ -221,6 +305,10 @@ export default function App() {
     setShowSettings(false);
   }
 
+  function toggleLang() {
+    setLang(l => l === "en" ? "hi" : "en");
+  }
+
   return (
     <main className={`game-shell level-${level.index}`}>
 
@@ -228,11 +316,14 @@ export default function App() {
       <header className="top-bar">
         <div className="brand">
           <div className="brand-coin">⚔</div>
-          <h1 className="pixel">Questlog</h1>
+          <h1 className="pixel">{t.appName}</h1>
         </div>
         <div className="top-bar-right">
+          <button className="icon-button lang-toggle" type="button" onClick={toggleLang}>
+            {lang === "en" ? "🇮🇳 हिन्दी" : "🇬🇧 English"}
+          </button>
           <button className="icon-button" type="button" onClick={() => setShowSettings(true)}>
-            ⚙️ Settings
+            {t.settings}
           </button>
         </div>
       </header>
@@ -245,18 +336,17 @@ export default function App() {
           {/* Hero banner */}
           <div className="hero-banner">
             <div className="weather-line">{weather.join(" ")}</div>
-            <p className="pixel-kicker">Your adventure awaits</p>
-            <h2>Your tasks are already a story.</h2>
-            <p>Questlog just tells it.</p>
+            <p className="pixel-kicker">{lang === "en" ? "Your adventure awaits" : "आपका साहसिक सफर शुरू होता है"}</p>
+            <h2>{t.tagline}</h2>
           </div>
 
           {/* Tabs */}
           <nav className="tab-bar">
             <button className={activeTab === "quests" ? "active" : ""} type="button" onClick={() => setActiveTab("quests")}>
-              Quests
+              {t.quests}
             </button>
             <button className={activeTab === "badges" ? "active" : ""} type="button" onClick={() => setActiveTab("badges")}>
-              Badges {game.badges.length}/11
+              {t.badges} {t.badgeCount(game.badges.length)}
             </button>
           </nav>
 
@@ -267,46 +357,46 @@ export default function App() {
               <form className="quest-form" onSubmit={addTask}>
                 <input
                   aria-label="Quest title"
-                  placeholder="Name your quest..."
+                  placeholder={t.namePlaceholder}
                   value={title}
                   onChange={e => setTitle(e.target.value)}
                 />
                 <select aria-label="Quest type" value={type} onChange={e => setType(e.target.value)}>
-                  <option value="main">Main quest</option>
-                  <option value="side">Side quest</option>
-                  <option value="daily">Daily quest</option>
+                  <option value="main">{t.questOptions.main}</option>
+                  <option value="side">{t.questOptions.side}</option>
+                  <option value="daily">{t.questOptions.daily}</option>
                 </select>
-                <button type="submit">+ Add Quest</button>
+                <button type="submit">{t.addQuest}</button>
               </form>
 
               <section className="stats-grid" aria-label="Quest stats">
-                <article><span>{stats.total}</span><p>Total</p></article>
-                <article><span>{stats.completed}</span><p>Completed</p></article>
-                <article><span>{stats.abandoned}</span><p>Abandoned</p></article>
-                <article><span>{stats.completionRate}%</span><p>Rate</p></article>
+                <article><span>{stats.total}</span><p>{t.stats.total}</p></article>
+                <article><span>{stats.completed}</span><p>{t.stats.completed}</p></article>
+                <article><span>{stats.abandoned}</span><p>{t.stats.abandoned}</p></article>
+                <article><span>{stats.completionRate}%</span><p>{t.stats.rate}</p></article>
               </section>
 
               <div className="content-grid">
                 <div className="quest-list" aria-label="Task list">
                   {tasks.length === 0 ? (
                     <div className="empty-state">
-                      <h2>No quests yet</h2>
-                      <p>Write the first task and start the run.</p>
+                      <h2>{t.emptyTitle}</h2>
+                      <p>{t.emptyBody}</p>
                     </div>
                   ) : tasks.map(task => (
                     <article className={`quest-card ${task.status}`} key={task.id}>
                       <div className="quest-copy">
-                        <span className={`type-pill ${task.type}`}>{QUEST_TYPES[task.type]}</span>
+                        <span className={`type-pill ${task.type}`}>{t.questTypes[task.type]}</span>
                         <h2>{task.title}</h2>
                         <p>{task.status}</p>
                       </div>
                       {task.status === "active" && (
                         <div className="quest-actions">
                           <button type="button" onClick={() => updateTaskStatus(task.id, "completed")}>
-                            +{Math.round(XP_REWARD[task.type] * multiplier)} XP
+                            {t.complete(Math.round(XP_REWARD[task.type] * multiplier))}
                           </button>
                           <button className="danger-button" type="button" onClick={() => updateTaskStatus(task.id, "abandoned")}>
-                            -{HP_DAMAGE[task.type]} HP
+                            {t.abandon(HP_DAMAGE[task.type])}
                           </button>
                         </div>
                       )}
@@ -315,11 +405,11 @@ export default function App() {
                 </div>
 
                 <aside className="chronicle-panel">
-                  <p className="pixel-kicker">Daily Chronicle</p>
-                  <h2>End Day</h2>
-                  <p>Uses HP, level, streak, and completion rate to set the narrator tone.</p>
+                  <p className="pixel-kicker">{t.chronicleKicker}</p>
+                  <h2>{t.chronicleTitle}</h2>
+                  <p>{t.chronicleDesc}</p>
                   <button type="button" onClick={generateChronicle} disabled={isLoading}>
-                    {isLoading ? "Writing..." : "Generate Chronicle →"}
+                    {isLoading ? t.generating : t.generateBtn}
                   </button>
                   {chronicle && <blockquote>{chronicle}</blockquote>}
                 </aside>
@@ -357,39 +447,39 @@ export default function App() {
                 <span className="stat-icon">⭐</span>
                 <div>
                   <span className="stat-value">{game.xp}</span>
-                  <span className="stat-label">Total XP</span>
+                  <span className="stat-label">{t.statLabels.xp}</span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">🏅</span>
                 <div>
                   <span className="stat-value">{game.badges.length}</span>
-                  <span className="stat-label">Badges</span>
+                  <span className="stat-label">{t.statLabels.badges}</span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">🔥</span>
                 <div>
                   <span className="stat-value">{game.streak}</span>
-                  <span className="stat-label">Day streak</span>
+                  <span className="stat-label">{t.statLabels.streak}</span>
                 </div>
               </div>
               <div className="profile-stat">
                 <span className="stat-icon">⚔️</span>
                 <div>
                   <span className="stat-value">{game.totalCompletions}</span>
-                  <span className="stat-label">Completed</span>
+                  <span className="stat-label">{t.statLabels.completed}</span>
                 </div>
               </div>
             </div>
 
-            <button className="wide-button" type="button">View Profile</button>
+            <button className="wide-button" type="button">{t.viewProfile}</button>
           </div>
 
           {/* HP */}
           <article className={`hud-card hp-card ${game.hp <= 35 ? "critical" : ""}`}>
             <div className="hud-label">
-              <span>HP</span>
+              <span>{t.hpLabel}</span>
               <strong>{game.hp}/100</strong>
             </div>
             <div className="meter">
@@ -408,15 +498,15 @@ export default function App() {
             </div>
             <small>
               {level.index === LEVELS.length - 1
-                ? "Max title reached"
-                : `${level.nextXp - game.xp} XP to ${level.nextTitle}`}
+                ? t.maxTitle
+                : t.xpToNext(level.nextXp - game.xp, level.nextTitle)}
             </small>
           </article>
 
           {/* Streak */}
           <article className="hud-card streak-card">
             <span>🔥 {game.streak}</span>
-            <p>{multiplier}x XP multiplier</p>
+            <p>{multiplier}{t.multiplier}</p>
           </article>
         </aside>
       </div>
@@ -425,9 +515,9 @@ export default function App() {
       {showSettings && (
         <div className="modal-backdrop" role="presentation">
           <form className="modal-card settings-card" onSubmit={saveSettings}>
-            <h2>⚙️ Settings</h2>
+            <h2>{t.settings}</h2>
             <label>
-              Claude API Key
+              {t.apiKeyLabel}
               <input
                 type="password"
                 value={draftSettings.apiKey}
@@ -441,11 +531,11 @@ export default function App() {
                 checked={draftSettings.demoMode}
                 onChange={e => setDraftSettings({ ...draftSettings, demoMode: e.target.checked })}
               />
-              Use mock chronicle
+              {t.mockLabel}
             </label>
             <div className="modal-actions">
-              <button type="button" className="plain-button" onClick={() => setShowSettings(false)}>Cancel</button>
-              <button type="submit">Save</button>
+              <button type="button" className="plain-button" onClick={() => setShowSettings(false)}>{t.cancelBtn}</button>
+              <button type="submit">{t.saveBtn}</button>
             </div>
           </form>
         </div>
@@ -455,10 +545,10 @@ export default function App() {
       {levelModal && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal-card">
-            <p className="pixel-kicker">Level Up</p>
+            <p className="pixel-kicker">{t.levelUp}</p>
             <h2>{levelModal.title}</h2>
-            <p>Your title has evolved. The world looks a little different now.</p>
-            <button type="button" onClick={() => setLevelModal(null)}>Continue</button>
+            <p>{t.levelUpBody}</p>
+            <button type="button" onClick={() => setLevelModal(null)}>{t.continueBtn}</button>
           </div>
         </div>
       )}
@@ -467,10 +557,10 @@ export default function App() {
       {badgeModal && (
         <div className="modal-backdrop" role="presentation">
           <div className="modal-card">
-            <p className="pixel-kicker">Badge Unlocked</p>
+            <p className="pixel-kicker">{t.badgeUnlocked}</p>
             <h2>🏅 {badgeModal.name}</h2>
             <p>{badgeModal.hint}</p>
-            <button type="button" onClick={() => setBadgeModal(null)}>Claim</button>
+            <button type="button" onClick={() => setBadgeModal(null)}>{t.claimBtn}</button>
           </div>
         </div>
       )}

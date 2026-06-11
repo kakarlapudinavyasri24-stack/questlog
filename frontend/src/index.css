@@ -620,3 +620,20 @@ blockquote {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .quest-card { flex-direction: column; align-items: flex-start; }
 }
+
+/* ── Localisation additions ──────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;700;900&display=swap');
+
+:lang(hi), [lang="hi"] {
+  font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+}
+
+.lang-toggle {
+  border-color: var(--border-lit);
+  font-size: .75rem;
+  letter-spacing: .02em;
+}
+.lang-toggle:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--gold);
+}
