@@ -15,7 +15,7 @@ function readDb() {
     const raw = fs.readFileSync(DB_PATH, "utf8");
     const data = JSON.parse(raw);
     return { tasks: Array.isArray(data.tasks) ? data.tasks : [] };
-  } catch (error) {
+  } catch {
     return { tasks: [] };
   }
 }
@@ -28,6 +28,7 @@ function normalizeTaskType(type) {
   return ["main", "side", "daily"].includes(type) ? type : "daily";
 }
 
+// eslint-disable-next-line no-unused-vars
 function buildChroniclePrompt(tasks, gameState, lang = "en") {
   const completed = tasks.filter((task) => task.status === "completed");
   const abandoned = tasks.filter((task) => task.status === "abandoned");
@@ -37,9 +38,10 @@ function buildChroniclePrompt(tasks, gameState, lang = "en") {
   const streak = Number(gameState?.streak ?? 0);
   const completionRate = Number(gameState?.completionRate ?? 0);
 
-  const languageInstruction = lang === "hi"
-    ? "Write the entire chronicle in Hindi (Devanagari script). Do not translate the player's quest names — keep them exactly as entered. Do not use English words except for XP, HP, and the quest titles."
-    : "Write the chronicle in English.";
+  const languageInstruction =
+    lang === "hi"
+      ? "Write the entire chronicle in Hindi (Devanagari script). Do not translate the player's quest names — keep them exactly as entered. Do not use English words except for XP, HP, and the quest titles."
+      : "Write the chronicle in English.";
 
   return [
     "Write a 3 to 5 sentence fantasy RPG daily chronicle for a gamified task app.",
@@ -49,7 +51,7 @@ function buildChroniclePrompt(tasks, gameState, lang = "en") {
     `Abandoned quests: ${abandoned.map((task) => task.title).join(", ") || "none"}.`,
     `Still active: ${active.map((task) => task.title).join(", ") || "none"}.`,
     "Use a gritty battered tone for low HP, triumphant tone for 100% completion, acknowledge long streaks, and keep it motivational.",
-    languageInstruction,
+    languageInstruction
   ].join("\n");
 }
 
@@ -73,8 +75,14 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       return `आज ${title} के लॉग में कोई क्वेस्ट दर्ज नहीं थी — केवल एक शांत राह और प्रतीक्षा करता आकाश। राज्य में कोई हलचल नहीं हुई, पर इरादे की लौ अभी भी जल रही है। कल, एक छोटी सी क्वेस्ट भी किंवदंती की शुरुआत कर सकती है।`;
     }
 
-    const completedNames = completed.slice(0, 3).map((t) => `"${t.title}"`).join(", ");
-    const abandonedNames = abandoned.slice(0, 2).map((t) => `"${t.title}"`).join(", ");
+    const completedNames = completed
+      .slice(0, 3)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
+    const abandonedNames = abandoned
+      .slice(0, 2)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
 
     const opening =
       hp <= 35
@@ -115,8 +123,14 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     return `The ${title} found no quests etched into the log today, only a quiet road and a waiting sky. The realm did not move, but the flame of intent still flickered. Tomorrow, even one small quest can begin the legend again.`;
   }
 
-  const completedNames = completed.slice(0, 3).map((task) => `"${task.title}"`).join(", ");
-  const abandonedNames = abandoned.slice(0, 2).map((task) => `"${task.title}"`).join(", ");
+  const completedNames = completed
+    .slice(0, 3)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
+  const abandonedNames = abandoned
+    .slice(0, 2)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
 
   const opening =
     hp <= 35
@@ -199,7 +213,7 @@ app.put("/tasks/:id", (req, res) => {
 });
 
 app.post("/chronicle", (req, res) => {
-  const { tasks, gameState, demoMode, lang = "en" } = req.body;
+  const { tasks, gameState, lang = "en" } = req.body;
   const story = mockChronicle(tasks || [], gameState || {}, lang);
   res.json({ story });
 });
