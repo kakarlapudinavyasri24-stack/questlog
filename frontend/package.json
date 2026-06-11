@@ -31,15 +31,6 @@
     "prettier": "^2.8.8",
     "biome": "^0.3.3",
     "oxlint": "^1.69.0",
-    "knip": "^1.4.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^13.2.0"
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
-  "prepare": "husky install"
+    "knip": "^1.4.0"
+  }
 }
