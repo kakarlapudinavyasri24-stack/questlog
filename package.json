@@ -1,0 +1,48 @@
+{
+  "name": "questlog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "QuestLog is a pixel-style gamified task manager where everyday tasks become RPG quests.",
+  "license": "AGPL-3.0-only",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev:backend",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev -- --host 127.0.0.1 --port 5174",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix backend run start",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "knip --no-config-hints",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "audit": "npm audit --audit-level=high",
+    "secrets": "gitleaks detect --source . --redact --verbose",
+    "changelog": "git-cliff --config cliff.toml --output CHANGELOG.md",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,cjs,mjs,json,md,css,html,yml,yaml,toml}": [
+      "prettier --write"
+    ],
+    "*.{js,jsx,cjs,mjs}": [
+      "eslint --max-warnings=0"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "@vitest/coverage-v8": "^4.1.8",
+    "eslint": "^9.8.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^15.9.0",
+    "husky": "^9.1.7",
+    "knip": "^5.41.1",
+    "lint-staged": "^17.0.7",
+    "prettier": "^3.3.3",
+    "vitest": "^4.1.8"
+  }
+}

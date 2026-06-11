@@ -1,83 +1,28 @@
-#  QuestLog
+# QuestLog
 
-**QuestLog** is a pixel-style gamified task manager where everyday tasks become RPG quests. Complete quests to gain XP, level up, unlock badges, maintain streaks, and generate a personalized **Daily Chronicle** of your adventures.
+QuestLog is a pixel-style gamified task manager where everyday work becomes RPG
+quests. Create main, side, and daily quests, complete them for XP, abandon them
+with HP consequences, unlock badges, keep streaks, and generate a story-like
+Daily Chronicle.
 
----
+## Features
 
-##  Features
+- Create main, side, and daily quests.
+- Complete quests to earn XP.
+- Abandon quests and lose HP based on quest type.
+- Track level progress, HP, streaks, completion rate, and badge unlocks.
+- Generate a Daily Chronicle using the current mock narrative engine.
+- Store tasks in a lightweight file-backed backend.
+- Store game state and settings in browser `localStorage`.
 
-### Quest System
+## Tech Stack
 
-* Create **Main**, **Side**, and **Daily** quests
-* Complete quests to earn XP
-* Abandon quests with HP penalties
-* Track quest progress in real-time
+- Frontend: React 18, Vite, vanilla CSS.
+- Backend: Node.js, Express 5, JSON file storage.
+- Tooling: ESLint, Prettier, Knip, Vitest, Husky, lint-staged, Gitleaks,
+  Git-Cliff, GitLab CI.
 
-### Health & Experience
-
-* ❤️ HP bar starts at **100**
-* ⚠️ HP penalties for abandoned quests:
-
-  * Main Quest: **-25 HP**
-  * Side Quest: **-15 HP**
-  * Daily Quest: **-10 HP**
-* ⭐ Earn XP for completed quests
-* 📈 Progress through multiple levels
-
-### Level Titles
-
-Advance through 7 RPG-inspired titles:
-
-1. Wanderer
-2. Adventurer
-3. Explorer
-4. Champion
-5. Hero
-6. Legend
-7. Mythic
-
-### Streak Multipliers
-
-Maintain consistency and earn bonus XP:
-
-* 🔥 3-Day Streak → **1.5× XP**
-* 🔥 7-Day Streak → **2× XP**
-
-### Achievements & Rewards
-
-* 🎖️ Unlock badges as you progress
-* 🏆 11 collectible badges
-* 🎉 Level-up modal notifications
-* ✨ Badge unlock animations
-
-### Daily Chronicle
-
-Generate a story-style summary of your day based on completed quests and achievements.
-
-* Demo/Mock Chronicle mode
-* Optional Claude AI integration
-* Personalized daily adventure logs
-
----
-
-##  Tech Stack
-
-### Frontend
-
-* React
-* Vite
-* Vanilla CSS
-* Fetch API
-
-### Backend
-
-* Node.js
-* Express.js
-* File-based storage (`db.json`)
-
----
-
-##  Project Structure
+## Project Structure
 
 ```text
 questlog/
@@ -92,50 +37,66 @@ questlog/
 │   │   └── index.css
 │   ├── index.html
 │   └── package.json
+├── specs/
+├── AGENTS.md
+├── USER_MANUAL.md
+├── package.json
 └── README.md
 ```
 
----
+## Prerequisites
 
-##  Getting Started
+- Node.js 20 or newer.
+- npm 10 or newer.
+- Docker, optional.
+- Gitleaks and Git-Cliff, optional for local secret scanning and changelog
+  generation. CI uses container images for those checks.
 
-### Prerequisites
+## Installation
 
-Make sure you have installed:
-
-* Node.js (v18+ recommended)
-* npm
-
----
-
-##  Running the Backend
-
-Open a terminal:
+Install all workspace dependencies from the repository root:
 
 ```bash
-cd backend
 npm install
-node server.js
 ```
 
-You should see:
-
-```text
-Questlog backend running on http://localhost:4000
-```
-
-Keep this terminal running.
-
----
-
-##  Running the Frontend
-
-Open a second terminal:
+You can also install packages independently if needed:
 
 ```bash
-cd frontend
-npm install
-npm run dev -- --host 127.0.0.1 --port 5174
+npm --prefix backend install
+npm --prefix frontend install
+```
+
+## Environment Variables
+
+Copy the example file before local development:
+
+```bash
+cp .env.example .env
+```
+
+Supported variables:
+
+| Variable            | Default                 | Description                                                                 |
+| ------------------- | ----------------------- | --------------------------------------------------------------------------- |
+| `PORT`              | `4000`                  | Backend port.                                                               |
+| `HOST`              | `0.0.0.0`               | Backend bind address.                                                       |
+| `NODE_ENV`          | `development`           | Runtime environment.                                                        |
+| `VITE_API_URL`      | `http://localhost:4000` | Frontend API base URL.                                                      |
+| `ANTHROPIC_API_KEY` | unset                   | Placeholder for future AI integration. The current backend does not use it. |
+
+## Running Locally
+
+Start the backend:
+
+```bash
+npm run dev:backend
+```
+
+Start the frontend in a second terminal:
+
+```bash
+npm run dev:frontend
 ```
 
 Open:
@@ -144,179 +105,75 @@ Open:
 http://127.0.0.1:5174
 ```
 
----
+## API Endpoints
 
-##  Chronicle Settings
+| Method | Path         | Description                                                         |
+| ------ | ------------ | ------------------------------------------------------------------- |
+| `GET`  | `/`          | Backend health message or built frontend if `frontend/dist` exists. |
+| `GET`  | `/tasks`     | Return all quests.                                                  |
+| `POST` | `/tasks`     | Create a quest from `{ "title": "...", "type": "daily" }`.          |
+| `PUT`  | `/tasks/:id` | Update quest status.                                                |
+| `POST` | `/chronicle` | Generate a mock Daily Chronicle.                                    |
 
-Click the **Settings** button inside the application.
+## Testing and Compliance
 
-### Demo Mode (Recommended)
+Run all repository quality checks:
 
-* Keep **Use Mock Chronicle** enabled
-* No API key required
-
-### Claude-Powered Chronicle
-
-1. Disable **Use Mock Chronicle**
-2. Paste your Anthropic Claude API key
-3. Save Settings
-
-The backend sends requests to Claude only when:
-
-* Mock mode is disabled
-* A valid API key is provided
-
----
-
-##  API Endpoints
-
-### Get All Tasks
-
-```http
-GET /tasks
+```bash
+npm run lint
+npm run format:check
+npm run typecheck
+npm run test
+npm run coverage
+npm run audit
 ```
 
-Returns all saved quests.
+Run secret scanning locally if Gitleaks is installed:
 
----
-
-### Create a Quest
-
-```http
-POST /tasks
+```bash
+npm run secrets
 ```
 
-#### Request Body
+Generate or update the changelog locally if Git-Cliff is installed:
 
-```json
-{
-  "title": "Finish assignment",
-  "type": "daily"
-}
+```bash
+npm run changelog
 ```
 
----
+## Docker Usage
 
-### Update Quest Status
+Build the production image:
 
-```http
-PUT /tasks/:id
+```bash
+docker build -t questlog .
 ```
 
-#### Request Body
+Run it:
 
-```json
-{
-  "status": "completed"
-}
+```bash
+docker run --rm -p 4000:4000 --env-file .env questlog
 ```
 
-#### Allowed Status Values
+Open:
 
 ```text
-completed
-abandoned
+http://localhost:4000
 ```
 
----
+The Docker image builds the Vite frontend and serves the built assets through the
+Express backend when `frontend/dist` is present.
 
-### Generate Daily Chronicle
+## Contribution Guide
 
-```http
-POST /chronicle
-```
+1. Create a feature branch.
+2. Install dependencies with `npm install`.
+3. Make focused changes that preserve existing QuestLog behavior.
+4. Run linting, formatting checks, tests, coverage, type checking, audit, and
+   secret scanning before opening a merge request.
+5. Update documentation when behavior, commands, environment variables, or API
+   contracts change.
+6. Use clear commit messages. Conventional commit prefixes such as `feat:`,
+   `fix:`, `docs:`, `test:`, and `ci:` improve changelog generation.
 
-Generates a Daily Chronicle using quest and game-state data.
-
----
-
-##  Troubleshooting
-
-### Add Quest Doesn't Work
-
-Ensure the backend is running:
-
-```bash
-cd backend
-node server.js
-```
-
-Then visit:
-
-```text
-http://localhost:4000/tasks
-```
-
-Expected response:
-
-```json
-[]
-```
-
-If you receive **404 Not Found**, another application may be using port **4000**.
-
-#### Windows PowerShell
-
-Find the process:
-
-```powershell
-Get-NetTCPConnection -LocalPort 4000 -State Listen
-```
-
-Stop the process:
-
-```powershell
-Stop-Process -Id YOUR_PROCESS_ID
-```
-
-Restart the backend afterward.
-
----
-
-### Frontend Opens the Wrong Vite App
-
-Run QuestLog on a dedicated port:
-
-```bash
-npm run dev -- --host 127.0.0.1 --port 5174
-```
-
-Then open:
-
-```text
-http://127.0.0.1:5174
-```
-
----
-
-##  Build Verification
-
-### Frontend Build Check
-
-```bash
-cd frontend
-npm run build
-```
-
-### Backend Syntax Check
-
-```bash
-cd backend
-node --check server.js
-```
-
----
-
-##  Game Loop
-
-1. Create quests
-2. Complete quests to earn XP
-3. Build streaks for bonus rewards
-4. Avoid abandoning quests to preserve HP
-5. Unlock badges and titles
-6. Generate your Daily Chronicle
-7. Become a **Mythic Adventurer**
-
----
-
-**QuestLog transforms productivity into an RPG adventure—turn your daily goals into epic quests.**
+See [AGENTS.md](AGENTS.md) for repository-specific implementation notes and
+[USER_MANUAL.md](USER_MANUAL.md) for end-user workflows.

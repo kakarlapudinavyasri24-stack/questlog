@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreBinaries": ["gitleaks", "git-cliff"],
+  "workspaces": {
+    ".": {
+      "entry": ["eslint.config.js", "vitest.config.js"],
+      "project": ["*.js"]
+    },
+    "backend": {
+      "entry": ["server.js"],
+      "project": ["**/*.js"]
+    },
+    "frontend": {
+      "entry": ["src/main.jsx"],
+      "project": ["src/**/*.{js,jsx}"]
+    }
+  },
+  "ignore": ["frontend/src/App.css", "frontend/src/assets/**", ".specify/**", ".gemini/**"],
+  "ignoreDependencies": ["@vitejs/plugin-react", "eslint-plugin-react"]
+}

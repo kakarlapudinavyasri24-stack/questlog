@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "start": "vite preview --host 127.0.0.1 --port 5174",
     "preview": "vite preview",
-    "lint": "eslint . --ext .js,.jsx",
-    "format": "prettier --write .",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier . --write",
+    "format:check": "prettier . --check",
+    "typecheck": "knip --include files,dependencies",
+    "test": "vitest run",
+    "coverage": "vitest run --coverage",
+    "audit": "npm audit --audit-level=high",
     "check:biome": "biome check .",
     "lint:oxc": "oxlint --config .oxlintrc.json",
     "check:unused": "knip"
@@ -19,21 +25,12 @@
     "vite": "^8.0.16"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9.8.0",
     "eslint-plugin-react": "^7.37.5",
-    "prettier": "^2.8.8",
-    "biome": "^0.3.3",
+    "knip": "^6.16.1",
     "oxlint": "^1.69.0",
-    "knip": "^1.4.0",
-    "husky": "^8.0.0",
-    "lint-staged": "^13.2.0"
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  },
-  "prepare": "husky install"
+    "prettier": "^2.8.8"
+  }
 }

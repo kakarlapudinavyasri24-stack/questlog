@@ -1,5 +1,6 @@
 # Contributing to Questlog
 
+Thank you for your interest in contributing to Questlog.
 Thanks for your interest in contributing to Questlog.
 
 ## Development Setup
@@ -12,6 +13,11 @@ Thanks for your interest in contributing to Questlog.
 
 ## Pull Requests
 
+- Create a feature branch
+- Write clear commit messages
+- Test changes before submitting
+- Ensure documentation is updated
+
 * Create a feature branch
 * Write clear commit messages
 * Test changes before submitting
@@ -21,10 +27,10 @@ Thanks for your interest in contributing to Questlog.
 
 Please include:
 
-* Expected behavior
-* Actual behavior
-* Steps to reproduce
-* Screenshots if applicable
+- Expected behavior
+- Actual behavior
+- Steps to reproduce
+- Screenshots if applicable
 
 ## Questions?
 

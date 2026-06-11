@@ -1,0 +1,19 @@
+title = "QuestLog Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Allow documented placeholder secrets and local examples"
+paths = [
+  '''\.env\.example$''',
+  '''README\.md$''',
+  '''USER_MANUAL\.md$'''
+]
+regexes = [
+  '''sk-ant-\.\.\.''',
+  '''your-api-key-here''',
+  '''change-me''',
+  '''vaniya\.fatma06@gmail\.com''',
+  '''YOUR_TOKEN'''
+]
