@@ -5,8 +5,13 @@ quests. Create main, side, and daily quests, complete them for XP, abandon them
 with HP consequences, unlock badges, keep streaks, and generate a story-like
 Daily Chronicle.
 
-##Live Demo
-https://spectacular-kitten-e45c33.netlify.app/
+---
+
+## Live Demo
+
+ https://spectacular-kitten-e45c33.netlify.app/
+
+---
 
 
 ## Features
