@@ -28,7 +28,6 @@ function normalizeTaskType(type) {
   return ["main", "side", "daily"].includes(type) ? type : "daily";
 }
 
-// eslint-disable-next-line no-unused-vars
 function buildChroniclePrompt(tasks, gameState, lang = "en") {
   const completed = tasks.filter((task) => task.status === "completed");
   const abandoned = tasks.filter((task) => task.status === "abandoned");
@@ -221,7 +220,18 @@ app.post("/chronicle", (req, res) => {
 const HOST = process.env.HOST || "0.0.0.0";
 const LISTEN_ADDRESS = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
-app.listen(PORT, HOST, () => {
-  console.log(`Backend running at ${LISTEN_ADDRESS}`);
-  console.log(`Listening on ${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`Backend running at ${LISTEN_ADDRESS}`);
+    console.log(`Listening on ${HOST}:${PORT}`);
+  });
+}
+
+module.exports = {
+  app,
+  buildChroniclePrompt,
+  mockChronicle,
+  normalizeTaskType,
+  readDb,
+  writeDb
+};
