@@ -9,7 +9,7 @@ Daily Chronicle.
 
 ## Live Demo
 
-https://spectacular-kitten-e45c33.netlify.app/
+https://6a2ba5684edf181a9d7d5408--questlog-duobingo.netlify.app/
 
 ---
 
