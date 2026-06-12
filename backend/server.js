@@ -15,7 +15,7 @@ function readDb() {
     const raw = fs.readFileSync(DB_PATH, "utf8");
     const data = JSON.parse(raw);
     return { tasks: Array.isArray(data.tasks) ? data.tasks : [] };
-  } catch (error) {
+  } catch {
     return { tasks: [] };
   }
 }
@@ -37,9 +37,12 @@ function buildChroniclePrompt(tasks, gameState, lang = "en") {
   const streak = Number(gameState?.streak ?? 0);
   const completionRate = Number(gameState?.completionRate ?? 0);
 
-  const languageInstruction = lang === "hi"
-    ? "Write the entire chronicle in Hindi (Devanagari script). Do not translate the player's quest names — keep them exactly as entered. Do not use English words except for XP, HP, and the quest titles."
-    : "Write the chronicle in English.";
+  const languageInstruction =
+    lang === "hi"
+      ? "Write the entire chronicle in Hindi (Devanagari script). Do not translate the player's quest names — keep them exactly as entered. Do not use English words except for XP, HP, and the quest titles."
+      : lang === "te"
+        ? "Write the entire chronicle in Telugu. Do not translate the player's quest names — keep them exactly as entered. Do not use English words except for XP, HP, and the quest titles."
+        : "Write the chronicle in English.";
 
   return [
     "Write a 3 to 5 sentence fantasy RPG daily chronicle for a gamified task app.",
@@ -49,7 +52,7 @@ function buildChroniclePrompt(tasks, gameState, lang = "en") {
     `Abandoned quests: ${abandoned.map((task) => task.title).join(", ") || "none"}.`,
     `Still active: ${active.map((task) => task.title).join(", ") || "none"}.`,
     "Use a gritty battered tone for low HP, triumphant tone for 100% completion, acknowledge long streaks, and keep it motivational.",
-    languageInstruction,
+    languageInstruction
   ].join("\n");
 }
 
@@ -73,8 +76,14 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       return `आज ${title} के लॉग में कोई क्वेस्ट दर्ज नहीं थी — केवल एक शांत राह और प्रतीक्षा करता आकाश। राज्य में कोई हलचल नहीं हुई, पर इरादे की लौ अभी भी जल रही है। कल, एक छोटी सी क्वेस्ट भी किंवदंती की शुरुआत कर सकती है।`;
     }
 
-    const completedNames = completed.slice(0, 3).map((t) => `"${t.title}"`).join(", ");
-    const abandonedNames = abandoned.slice(0, 2).map((t) => `"${t.title}"`).join(", ");
+    const completedNames = completed
+      .slice(0, 3)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
+    const abandonedNames = abandoned
+      .slice(0, 2)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
 
     const opening =
       hp <= 35
@@ -110,13 +119,67 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
   }
 
+  if (lang === "te") {
+    if (total === 0) {
+      return `ఈ రోజు ${title} లాగ్‌లో ఏ క్వెస్ట్ కూడా నమోదు కాలేదు — నిశ్శబ్ద మార్గం మరియు ఎదురుచూస్తున్న ఆకాశం మాత్రమే ఉన్నాయి. రాజ్యంలో పెద్ద కదలిక లేకపోయినా, సంకల్ప జ్యోతి ఇంకా వెలుగుతోంది. రేపు ఒక చిన్న క్వెస్ట్ కూడా కొత్త గాథకు ఆరంభం కావచ్చు.`;
+    }
+
+    const completedNames = completed
+      .slice(0, 3)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
+    const abandonedNames = abandoned
+      .slice(0, 2)
+      .map((t) => `"${t.title}"`)
+      .join(", ");
+
+    const opening =
+      hp <= 35
+        ? `గాయాలతోనూ నిలబడి, ${title} ఈ రోజు ${total} క్వెస్ట్${total === 1 ? "" : "‌ల"}తో కఠినమైన రోజును దాటారు.`
+        : completionRate === 100
+          ? `${title} ఈ రోజు కనిపించిన ప్రతి క్వెస్ట్‌ను జయించి విజయ పతాకం కింద నిలిచారు.`
+          : `${title} స్థిరమైన సంకల్పంతో ఈ రోజు ${total} క్వెస్ట్${total === 1 ? "" : "‌లను"} ఎదుర్కొన్నారు.`;
+
+    const progress =
+      completed.length > 0
+        ? `${completed.length} క్వెస్ట్${completed.length === 1 ? "" : "‌లు"} పూర్తయ్యాయి, అందులో ${completedNames} ఉన్నాయి.`
+        : "ఏ క్వెస్ట్ పూర్తికాలేదు, కానీ ప్రయత్నం నేర్పిన పాఠం లాగ్‌లో నమోదైంది.";
+
+    const losses =
+      abandoned.length > 0
+        ? `${abandoned.length} మార్గ${abandoned.length === 1 ? "ం" : "ాలు"} విడిచిపెట్టబడ్డాయి — ${abandonedNames} వెనుక మిగిలాయి.`
+        : active.length > 0
+          ? `${active.length} క్వెస్ట్${active.length === 1 ? "" : "‌లు"} రేపటి అంచున ఇంకా మెరిసుతున్నాయి.`
+          : "ఏ క్వెస్ట్ వదిలివేయబడలేదు; రోజు స్వచ్ఛమైన ఖడ్గంలా ముగిసింది.";
+
+    const streakLine =
+      streak >= 7
+        ? `${streak} రోజుల జ్వలించే వరుస కృషి కథకుడి స్వరాన్ని గర్జనలా మార్చింది.`
+        : streak >= 3
+          ? `${streak} రోజుల జ్యోతి మరింత ప్రకాశించి, ప్రతి విజయానికి అదనపు బలం ఇచ్చింది.`
+          : "ఈ జ్యోతి ఇంకా కొత్తదే, కానీ ప్రతి రోజు చేసే కార్యం దాన్ని మరింత పెంచుతుంది.";
+
+    const closing =
+      hp <= 35
+        ? "ఇప్పుడు విశ్రాంతి తీసుకోండి, కవచాన్ని సరిచేసుకోండి, గాయాలకంటే పదునుగా తిరిగి రండి."
+        : "సంపాదించిన అనుభవంతో ఈ క్రానికల్ ముగుస్తుంది; మరో ఉదయం ద్వారం వద్ద ఎదురుచూస్తోంది.";
+
+    return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
+  }
+
   // English (original logic)
   if (total === 0) {
     return `The ${title} found no quests etched into the log today, only a quiet road and a waiting sky. The realm did not move, but the flame of intent still flickered. Tomorrow, even one small quest can begin the legend again.`;
   }
 
-  const completedNames = completed.slice(0, 3).map((task) => `"${task.title}"`).join(", ");
-  const abandonedNames = abandoned.slice(0, 2).map((task) => `"${task.title}"`).join(", ");
+  const completedNames = completed
+    .slice(0, 3)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
+  const abandonedNames = abandoned
+    .slice(0, 2)
+    .map((task) => `"${task.title}"`)
+    .join(", ");
 
   const opening =
     hp <= 35
@@ -199,7 +262,7 @@ app.put("/tasks/:id", (req, res) => {
 });
 
 app.post("/chronicle", (req, res) => {
-  const { tasks, gameState, demoMode, lang = "en" } = req.body;
+  const { tasks, gameState, lang = "en" } = req.body;
   const story = mockChronicle(tasks || [], gameState || {}, lang);
   res.json({ story });
 });
@@ -207,7 +270,18 @@ app.post("/chronicle", (req, res) => {
 const HOST = process.env.HOST || "0.0.0.0";
 const LISTEN_ADDRESS = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
-app.listen(PORT, HOST, () => {
-  console.log(`Backend running at ${LISTEN_ADDRESS}`);
-  console.log(`Listening on ${HOST}:${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, HOST, () => {
+    console.log(`Backend running at ${LISTEN_ADDRESS}`);
+    console.log(`Listening on ${HOST}:${PORT}`);
+  });
+}
+
+module.exports = {
+  app,
+  buildChroniclePrompt,
+  mockChronicle,
+  normalizeTaskType,
+  readDb,
+  writeDb
+};

@@ -1,0 +1,165 @@
+{
+  "app": {
+    "name": "क्वेस्टलॉग"
+  },
+  "appTitle": "क्वेस्टलॉग",
+  "reportIssue": "समस्या दर्ज करें",
+  "trackIssues": "समस्याओं की स्थिति देखें",
+  "login": "लॉग इन करें",
+  "signup": "पंजीकरण करें",
+  "languages": {
+    "en": "अंग्रेज़ी",
+    "hi": "हिन्दी",
+    "te": "तेलुगु"
+  },
+  "languageSwitcher": {
+    "label": "भाषा",
+    "ariaLabel": "भाषा चुनें"
+  },
+  "settings": {
+    "button": "सेटिंग्स",
+    "title": "सेटिंग्स",
+    "apiKeyLabel": "Claude API कुंजी",
+    "apiKeyPlaceholder": "sk-ant-...",
+    "mockLabel": "नमूना क्रॉनिकल का उपयोग करें",
+    "save": "सहेजें",
+    "cancel": "रद्द करें"
+  },
+  "hero": {
+    "kicker": "आपका साहसिक अभियान प्रतीक्षा कर रहा है",
+    "tagline": "साधारण कार्य नीरस लग सकते हैं। क्वेस्ट नहीं।"
+  },
+  "tabs": {
+    "quests": "क्वेस्ट",
+    "badges": "बैज",
+    "badgesWithCount": "बैज {{count}}/11"
+  },
+  "form": {
+    "titleAriaLabel": "क्वेस्ट का शीर्षक",
+    "typeAriaLabel": "क्वेस्ट का प्रकार",
+    "titlePlaceholder": "अपनी क्वेस्ट का नाम लिखें...",
+    "addQuest": "क्वेस्ट जोड़ें"
+  },
+  "questTypes": {
+    "main": "मुख्य क्वेस्ट",
+    "side": "सहायक क्वेस्ट",
+    "daily": "दैनिक क्वेस्ट"
+  },
+  "status": {
+    "active": "सक्रिय",
+    "completed": "पूर्ण",
+    "abandoned": "छोड़ी गई"
+  },
+  "stats": {
+    "ariaLabel": "क्वेस्ट आंकड़े",
+    "total": "कुल",
+    "completed": "पूर्ण",
+    "abandoned": "छोड़ी गई",
+    "rate": "दर"
+  },
+  "quests": {
+    "listAriaLabel": "कार्य सूची"
+  },
+  "empty": {
+    "title": "अभी कोई क्वेस्ट नहीं है",
+    "body": "पहला कार्य लिखें और अभियान शुरू करें।"
+  },
+  "chronicle": {
+    "kicker": "दैनिक क्रॉनिकल",
+    "title": "दिन समाप्त करें",
+    "description": "HP, स्तर, क्रम और पूर्णता दर के आधार पर कथावाचक का स्वर तय करता है।",
+    "generate": "क्रॉनिकल बनाएं",
+    "generating": "लिखा जा रहा है..."
+  },
+  "actions": {
+    "complete": "+{{xp}} XP",
+    "abandon": "-{{hp}} HP"
+  },
+  "profile": {
+    "name": "नायक",
+    "view": "प्रोफ़ाइल देखें",
+    "stats": {
+      "xp": "कुल XP",
+      "badges": "बैज",
+      "streak": "दिनों का क्रम",
+      "completed": "पूर्ण"
+    }
+  },
+  "hud": {
+    "hp": "HP",
+    "xpValue": "XP {{xp}}",
+    "maxTitle": "अधिकतम उपाधि प्राप्त",
+    "xpToNext": "{{title}} तक {{xp}} XP",
+    "multiplier": "{{multiplier}}x XP गुणक"
+  },
+  "levels": {
+    "wanderer": "पथिक",
+    "scout": "टोही",
+    "adventurer": "साहसी",
+    "knight": "योद्धा",
+    "champion": "विजेता",
+    "legend": "किंवदंती",
+    "mythic": "मिथकीय"
+  },
+  "levelUp": {
+    "kicker": "स्तर बढ़ा",
+    "body": "आपकी उपाधि विकसित हो गई है। अब संसार थोड़ा अलग दिखाई देता है।",
+    "continue": "जारी रखें"
+  },
+  "badgeModal": {
+    "kicker": "बैज अनलॉक हुआ",
+    "claim": "प्राप्त करें"
+  },
+  "badges": {
+    "first-blood": {
+      "name": "पहली विजय",
+      "hint": "अपनी पहली क्वेस्ट पूर्ण करें।"
+    },
+    "perfect-day": {
+      "name": "पूर्ण दिवस",
+      "hint": "दिन समाप्त करते समय हर क्वेस्ट पूर्ण हो।"
+    },
+    "survivor": {
+      "name": "अडिग",
+      "hint": "गंभीर HP स्थिति में भी आगे बढ़ते रहें।"
+    },
+    "strategist": {
+      "name": "रणनीतिकार",
+      "hint": "एक मुख्य, एक सहायक और एक दैनिक क्वेस्ट पूर्ण करें।"
+    },
+    "ghost": {
+      "name": "छाया",
+      "hint": "3 क्वेस्ट छोड़ें।"
+    },
+    "chronicler": {
+      "name": "वृत्तांतकार",
+      "hint": "अपना पहला क्रॉनिकल बनाएं।"
+    },
+    "variety-hero": {
+      "name": "विविधता नायक",
+      "hint": "तीनों प्रकार की क्वेस्ट दर्ज करें।"
+    },
+    "on-fire": {
+      "name": "लय में",
+      "hint": "3 दिन का क्रम प्राप्त करें।"
+    },
+    "unstoppable": {
+      "name": "अजेय",
+      "hint": "7 दिन का क्रम प्राप्त करें।"
+    },
+    "centurion": {
+      "name": "शतकवीर",
+      "hint": "100 क्वेस्ट पूर्ण करें।"
+    },
+    "creature-of-habit": {
+      "name": "नियमित साधक",
+      "hint": "7 दैनिक क्वेस्ट पूर्ण करें।"
+    }
+  },
+  "errors": {
+    "loadQuests": "क्वेस्ट लोड नहीं हो सकीं।",
+    "addQuest": "क्वेस्ट जोड़ी नहीं जा सकी।",
+    "updateQuest": "क्वेस्ट अपडेट नहीं हो सकी।",
+    "generateChronicle": "दैनिक क्रॉनिकल नहीं बन सका।"
+  }
+}
