@@ -91,26 +91,22 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
         : completionRate === 100
           ? `${title} ने आज की सभी क्वेस्ट जीतकर विजय का परचम लहराया।`
           : `${title} ने दृढ़ संकल्प के साथ आज ${total} क्वेस्ट${total === 1 ? "" : "ों"} का सामना किया।`;
-
     const progress =
       completed.length > 0
         ? `${completed.length} क्वेस्ट पूरी हुईं, जिनमें ${completedNames} शामिल हैं।`
         : "कोई क्वेस्ट पूरी नहीं हुई, पर प्रयास का पाठ लॉग में दर्ज हो गया।";
-
     const losses =
       abandoned.length > 0
         ? `${abandoned.length} राह${abandoned.length === 1 ? "" : "ें"} छूट गईं — ${abandonedNames} पीछे रह गए।`
         : active.length > 0
           ? `${active.length} क्वेस्ट अभी भी कल की दहलीज़ पर चमक रह${active.length === 1 ? "ी है" : "ी हैं"}।`
           : "कोई क्वेस्ट नहीं छोड़ी गई, और दिन साफ़ तलवार के साथ बंद हुआ।";
-
     const streakLine =
       streak >= 7
         ? `${streak} दिनों की धधकती स्ट्रीक ने कथावाचक को गर्जना में बुला लिया।`
         : streak >= 3
           ? `${streak} दिनों की लौ और तेज़ जली, हर जीत को और ऊर्जा देती रही।`
           : "लौ अभी नई है, पर हर दिन का कदम उसे बड़ा करता है।";
-
     const closing =
       hp <= 35
         ? "अभी विश्राम करो, कवच सुधारो, और ज़ख्मों से तेज़ होकर लौटो।"
@@ -139,26 +135,22 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
         : completionRate === 100
           ? `${title} ఈ రోజు కనిపించిన ప్రతి క్వెస్ట్‌ను జయించి విజయ పతాకం కింద నిలిచారు.`
           : `${title} స్థిరమైన సంకల్పంతో ఈ రోజు ${total} క్వెస్ట్${total === 1 ? "" : "‌లను"} ఎదుర్కొన్నారు.`;
-
     const progress =
       completed.length > 0
         ? `${completed.length} క్వెస్ట్${completed.length === 1 ? "" : "‌లు"} పూర్తయ్యాయి, అందులో ${completedNames} ఉన్నాయి.`
         : "ఏ క్వెస్ట్ పూర్తికాలేదు, కానీ ప్రయత్నం నేర్పిన పాఠం లాగ్‌లో నమోదైంది.";
-
     const losses =
       abandoned.length > 0
         ? `${abandoned.length} మార్గ${abandoned.length === 1 ? "ం" : "ాలు"} విడిచిపెట్టబడ్డాయి — ${abandonedNames} వెనుక మిగిలాయి.`
         : active.length > 0
           ? `${active.length} క్వెస్ట్${active.length === 1 ? "" : "‌లు"} రేపటి అంచున ఇంకా మెరిసుతున్నాయి.`
           : "ఏ క్వెస్ట్ వదిలివేయబడలేదు; రోజు స్వచ్ఛమైన ఖడ్గంలా ముగిసింది.";
-
     const streakLine =
       streak >= 7
         ? `${streak} రోజుల జ్వలించే వరుస కృషి కథకుడి స్వరాన్ని గర్జనలా మార్చింది.`
         : streak >= 3
           ? `${streak} రోజుల జ్యోతి మరింత ప్రకాశించి, ప్రతి విజయానికి అదనపు బలం ఇచ్చింది.`
           : "ఈ జ్యోతి ఇంకా కొత్తదే, కానీ ప్రతి రోజు చేసే కార్యం దాన్ని మరింత పెంచుతుంది.";
-
     const closing =
       hp <= 35
         ? "ఇప్పుడు విశ్రాంతి తీసుకోండి, కవచాన్ని సరిచేసుకోండి, గాయాలకంటే పదునుగా తిరిగి రండి."
@@ -167,7 +159,7 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
   }
 
-  // English (original logic)
+  // English
   if (total === 0) {
     return `The ${title} found no quests etched into the log today, only a quiet road and a waiting sky. The realm did not move, but the flame of intent still flickered. Tomorrow, even one small quest can begin the legend again.`;
   }
@@ -187,26 +179,22 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       : completionRate === 100
         ? `The ${title} stood beneath a bright banner after conquering every quest in sight.`
         : `The ${title} crossed the map of the day and faced ${total} quest${total === 1 ? "" : "s"} with steady resolve.`;
-
   const progress =
     completed.length > 0
       ? `${completed.length} were completed, including ${completedNames}.`
       : "No quest was completed, but the log still recorded the lesson of the attempt.";
-
   const losses =
     abandoned.length > 0
       ? `${abandoned.length} path${abandoned.length === 1 ? "" : "s"} fell away, with ${abandonedNames} left behind.`
       : active.length > 0
         ? `${active.length} quest${active.length === 1 ? "" : "s"} still shimmer on the edge of tomorrow.`
         : "No quest was abandoned, and the day closed with clean steel.";
-
   const streakLine =
     streak >= 7
       ? `A blazing ${streak}-day streak made the narrator speak in thunder.`
       : streak >= 3
         ? `The ${streak}-day flame burned hotter, lending extra force to every victory.`
         : "The flame is young, but every day of action feeds it.";
-
   const closing =
     hp <= 35
       ? "Rest now, repair the armor, and return sharper than the wounds."
@@ -261,10 +249,53 @@ app.put("/tasks/:id", (req, res) => {
   res.json(task);
 });
 
-app.post("/chronicle", (req, res) => {
-  const { tasks, gameState, lang = "en" } = req.body;
-  const story = mockChronicle(tasks || [], gameState || {}, lang);
-  res.json({ story });
+// ── Chronicle route ───────────────────────────────────────────────────────────
+app.post("/chronicle", async (req, res) => {
+  const { tasks, gameState, demoMode, lang = "en" } = req.body;
+
+  // Demo mode — use local mock, no AI call
+  if (demoMode) {
+    return res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
+  }
+
+  // Live mode — call Groq
+  const groqApiKey = process.env.GROQ_API_KEY;
+  if (!groqApiKey) {
+    // No key set — silently fall back to mock
+    return res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
+  }
+
+  try {
+    const prompt = buildChroniclePrompt(tasks || [], gameState || {}, lang);
+
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${groqApiKey}`
+      },
+      body: JSON.stringify({
+        model: "llama3-8b-8192",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 300,
+        temperature: 0.85
+      })
+    });
+
+    if (!response.ok) {
+      console.error("Groq error:", await response.text());
+      return res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
+    }
+
+    const data = await response.json();
+    const story =
+      data.choices?.[0]?.message?.content?.trim() ||
+      mockChronicle(tasks || [], gameState || {}, lang);
+    res.json({ story });
+  } catch (err) {
+    console.error("Chronicle generation failed:", err.message);
+    res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
+  }
 });
 
 const HOST = process.env.HOST || "0.0.0.0";
