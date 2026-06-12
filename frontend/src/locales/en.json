@@ -32,13 +32,16 @@
   "tabs": {
     "quests": "Quests",
     "badges": "Badges",
-    "badgesWithCount": "Badges {{count}}/11"
+    "badgesWithCount": "Badges {{count}}/11",
+    "equipment": "Equipment",
+    "historyWithCount": "History ({{count}})"
   },
   "form": {
     "titleAriaLabel": "Quest title",
     "typeAriaLabel": "Quest type",
     "titlePlaceholder": "Name your quest...",
-    "addQuest": "Add Quest"
+    "addQuest": "Add Quest",
+    "dueDateAriaLabel": "Due date (optional)"
   },
   "questTypes": {
     "main": "Main quest",
@@ -115,6 +118,10 @@
       "name": "First Blood",
       "hint": "Complete your first quest."
     },
+    "punctual": {
+      "name": "Punctual",
+      "hint": "Complete a quest before its due date"
+    },
     "perfect-day": {
       "name": "Perfect Day",
       "hint": "End a day with every quest completed."
@@ -162,13 +169,6 @@
     "updateQuest": "Could not update quest.",
     "generateChronicle": "Could not generate the Daily Chronicle."
   },
-  "tabs": {
-    "equipment": "Equipment",
-    "historyWithCount": "History ({{count}})"
-  },
-  "form": {
-    "dueDateAriaLabel": "Due date (optional)"
-  },
   "dueDates": {
     "overdue": "🔥 Overdue — {{days}} day",
     "overdue_plural": "🔥 Overdue — {{days}} days",
@@ -205,11 +205,5 @@
     "streakStat": "🔥 {{streak}} streak",
     "hpStat": "HP {{hp}}",
     "newBadge": "🏅 {{badge}} badge unlocked"
-  },
-  "badges": {
-    "punctual": {
-      "name": "Punctual",
-      "hint": "Complete a quest before its due date"
-    }
   }
 }
