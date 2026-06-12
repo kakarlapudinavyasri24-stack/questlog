@@ -213,7 +213,7 @@ app.get("/tasks", (req, res) => {
 });
 
 app.post("/tasks", (req, res) => {
-  const { title, type } = req.body;
+  const { title, type, dueDate } = req.body;
   if (!title) {
     return res.status(400).json({ error: "Task title is required." });
   }
@@ -224,6 +224,7 @@ app.post("/tasks", (req, res) => {
     title: String(title).trim(),
     type: normalizeTaskType(type),
     status: "active",
+    dueDate: dueDate ? String(dueDate) : null,
     createdAt: new Date().toISOString()
   };
 
@@ -231,9 +232,8 @@ app.post("/tasks", (req, res) => {
   writeDb(data);
   res.status(201).json(newTask);
 });
-
 app.put("/tasks/:id", (req, res) => {
-  const { status } = req.body;
+  const { status, dueDate } = req.body;
   const data = readDb();
   const task = data.tasks.find((item) => item.id === req.params.id);
 
@@ -243,6 +243,9 @@ app.put("/tasks/:id", (req, res) => {
 
   if (status) {
     task.status = status;
+  }
+  if (dueDate !== undefined) {
+    task.dueDate = dueDate ? String(dueDate) : null;
   }
 
   writeDb(data);

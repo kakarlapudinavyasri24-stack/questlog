@@ -161,5 +161,55 @@
     "addQuest": "Could not add quest.",
     "updateQuest": "Could not update quest.",
     "generateChronicle": "Could not generate the Daily Chronicle."
+  },
+  "tabs": {
+    "equipment": "Equipment",
+    "historyWithCount": "History ({{count}})"
+  },
+  "form": {
+    "dueDateAriaLabel": "Due date (optional)"
+  },
+  "dueDates": {
+    "overdue": "🔥 Overdue — {{days}} day",
+    "overdue_plural": "🔥 Overdue — {{days}} days",
+    "dueToday": "⚠️ Due today",
+    "dueIn": "📅 Due in {{days}} day",
+    "dueIn_plural": "📅 Due in {{days}} days",
+    "completedOnTime": "✅ Completed on time",
+    "autoAbandonNote": "Auto-abandons in 24h → -{{hp}} HP",
+    "expiresNote": "Expires at midnight → -{{hp}} HP"
+  },
+  "equipment": {
+    "spriteNote": "Equipment shows live on your sprite",
+    "activeBonuses": "Active bonuses",
+    "requiresLevel": "🔒 Reach {{level}}",
+    "requiresCompletions": "🔒 {{count}} quests",
+    "bonus": {
+      "maxHp": "Max HP",
+      "xpMult": "XP gain",
+      "hpReduction": "HP damage reduction"
+    },
+    "items": {
+      "helmet": { "name": "Iron Helm", "bonus": "+5 HP max" },
+      "sword": { "name": "Steel Sword", "bonus": "+10% XP" },
+      "shield": { "name": "Oak Shield", "bonus": "-5 HP damage" },
+      "staff": { "name": "Mage Staff", "bonus": "+15% XP" },
+      "crown": { "name": "Gold Crown", "bonus": "+10 HP max" },
+      "cape": { "name": "Mythic Cape", "bonus": "-10 HP damage" }
+    }
+  },
+  "history": {
+    "emptyTitle": "No chronicles yet",
+    "emptyBody": "Generate your first chronicle from the Quests tab to start your history.",
+    "questCount": "{{completed}}/{{total}} quests",
+    "streakStat": "🔥 {{streak}} streak",
+    "hpStat": "HP {{hp}}",
+    "newBadge": "🏅 {{badge}} badge unlocked"
+  },
+  "badges": {
+    "punctual": {
+      "name": "Punctual",
+      "hint": "Complete a quest before its due date"
+    }
   }
 }

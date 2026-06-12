@@ -9,7 +9,7 @@
     },
     {
       "id": "1781085181194",
-      "title": "water",
+      "title": "reply to mentors mails",
       "type": "daily",
       "status": "completed",
       "createdAt": "2026-06-10T09:53:01.194Z"
@@ -37,7 +37,7 @@
     },
     {
       "id": "1781152114855",
-      "title": "task 2",
+      "title": "finidsh ui redesign",
       "type": "daily",
       "status": "completed",
       "createdAt": "2026-06-11T04:28:34.855Z"
@@ -50,11 +50,11 @@
       "createdAt": "2026-06-11T04:30:53.136Z"
     },
     {
-      "id": "1781164987394",
-      "title": "task 4",
-      "type": "main",
+      "id": "1781251690157",
+      "title": "daily run",
+      "type": "daily",
       "status": "completed",
-      "createdAt": "2026-06-11T08:03:07.395Z"
+      "createdAt": "2026-06-12T08:08:10.157Z"
     }
   ]
 }

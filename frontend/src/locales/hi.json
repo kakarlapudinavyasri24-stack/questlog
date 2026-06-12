@@ -161,5 +161,55 @@
     "addQuest": "क्वेस्ट जोड़ी नहीं जा सकी।",
     "updateQuest": "क्वेस्ट अपडेट नहीं हो सकी।",
     "generateChronicle": "दैनिक क्रॉनिकल नहीं बन सका।"
+  },
+  "tabs": {
+    "equipment": "उपकरण",
+    "historyWithCount": "इतिहास ({{count}})"
+  },
+  "form": {
+    "dueDateAriaLabel": "देय तिथि (वैकल्पिक)"
+  },
+  "dueDates": {
+    "overdue": "🔥 समय सीमा बीती — {{days}} दिन",
+    "overdue_plural": "🔥 समय सीमा बीती — {{days}} दिन",
+    "dueToday": "⚠️ आज देय",
+    "dueIn": "📅 {{days}} दिन में देय",
+    "dueIn_plural": "📅 {{days}} दिनों में देय",
+    "completedOnTime": "✅ समय पर पूरा हुआ",
+    "autoAbandonNote": "24 घंटे में स्वतः छूट जाएगा → -{{hp}} HP",
+    "expiresNote": "आधी रात को समाप्त → -{{hp}} HP"
+  },
+  "equipment": {
+    "spriteNote": "उपकरण आपके स्प्राइट पर लाइव दिखता है",
+    "activeBonuses": "सक्रिय बोनस",
+    "requiresLevel": "🔒 {{level}} स्तर तक पहुँचें",
+    "requiresCompletions": "🔒 {{count}} क्वेस्ट पूरी करें",
+    "bonus": {
+      "maxHp": "अधिकतम HP",
+      "xpMult": "XP लाभ",
+      "hpReduction": "HP क्षति में कमी"
+    },
+    "items": {
+      "helmet": { "name": "लौह शिरस्त्राण", "bonus": "+5 अधिकतम HP" },
+      "sword": { "name": "इस्पात तलवार", "bonus": "+10% XP" },
+      "shield": { "name": "ओक ढाल", "bonus": "-5 HP क्षति" },
+      "staff": { "name": "जादुई दंड", "bonus": "+15% XP" },
+      "crown": { "name": "स्वर्ण मुकुट", "bonus": "+10 अधिकतम HP" },
+      "cape": { "name": "पौराणिक चादर", "bonus": "-10 HP क्षति" }
+    }
+  },
+  "history": {
+    "emptyTitle": "अभी तक कोई वृत्तांत नहीं",
+    "emptyBody": "अपना इतिहास शुरू करने के लिए क्वेस्ट टैब से अपना पहला वृत्तांत बनाएँ।",
+    "questCount": "{{completed}}/{{total}} क्वेस्ट",
+    "streakStat": "🔥 {{streak}} स्ट्रीक",
+    "hpStat": "HP {{hp}}",
+    "newBadge": "🏅 {{badge}} बैज अनलॉक हुआ"
+  },
+  "badges": {
+    "punctual": {
+      "name": "समयनिष्ठ",
+      "hint": "किसी क्वेस्ट को उसकी देय तिथि से पहले पूरा करें"
+    }
   }
 }

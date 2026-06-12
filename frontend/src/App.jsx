@@ -7,6 +7,7 @@ const API_URL = 'http://localhost:4000'
 // ── Game constants ────────────────────────────────────────────────────────────
 const XP_REWARD = { main: 45, side: 30, daily: 20 }
 const HP_DAMAGE = { main: 25, side: 15, daily: 10 }
+const BASE_MAX_HP = 100
 const LEVELS = [
   { id: 'wanderer', xp: 0 },
   { id: 'scout', xp: 100 },
@@ -28,7 +29,26 @@ const BADGES = [
   { id: 'unstoppable' },
   { id: 'centurion' },
   { id: 'creature-of-habit' },
+  { id: 'punctual' },
 ]
+
+// ── Equipment ────────────────────────────────────────────────────────────────
+// Slot order matches the visual sprite overlays (helmet / cape / shield) plus
+// later unlocks (staff, crown, cape-upgrade).
+const EQUIPMENT = [
+  { id: 'helmet', icon: '⛑️', bonus: { maxHp: 5 } },
+  { id: 'sword', icon: '🗡️', bonus: { xpMult: 0.1 } },
+  { id: 'shield', icon: '🛡️', bonus: { hpReduction: 5 } },
+  { id: 'staff', icon: '🪄', bonus: { xpMult: 0.15 }, requiresLevel: 4 },
+  { id: 'crown', icon: '👑', bonus: { maxHp: 10 }, requiresLevel: 5 },
+  {
+    id: 'cape',
+    icon: '🧥',
+    bonus: { hpReduction: 10 },
+    requiresCompletions: 100,
+  },
+]
+
 const DEFAULT_GAME = {
   hp: 100,
   xp: 0,
@@ -38,8 +58,12 @@ const DEFAULT_GAME = {
   totalCompletions: 0,
   totalAbandons: 0,
   completedTypeCounts: { main: 0, side: 0, daily: 0 },
+  equipped: ['helmet', 'sword', 'shield'],
+  earnedPunctual: false,
+  chronicleHistory: [],
 }
 const DEFAULT_SETTINGS = { apiKey: '', demoMode: true }
+const MAX_HISTORY_ENTRIES = 20
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function readStoredValue(key, fallback) {
@@ -82,16 +106,74 @@ function getWeather(levelIndex) {
   return ['☁️', '🌤️', '🌧️', '🪵']
 }
 
+// Whether an equipment item's unlock requirements are met
+function isEquipmentUnlocked(item, levelIndex, totalCompletions) {
+  if (item.requiresLevel != null && levelIndex < item.requiresLevel)
+    return false
+  if (
+    item.requiresCompletions != null &&
+    totalCompletions < item.requiresCompletions
+  )
+    return false
+  return true
+}
+
+// Sum bonuses across equipped + unlocked items
+function getEquipmentBonuses(equipped, levelIndex, totalCompletions) {
+  return EQUIPMENT.reduce(
+    (acc, item) => {
+      if (
+        equipped.includes(item.id) &&
+        isEquipmentUnlocked(item, levelIndex, totalCompletions)
+      ) {
+        acc.maxHp += item.bonus.maxHp || 0
+        acc.xpMult += item.bonus.xpMult || 0
+        acc.hpReduction += item.bonus.hpReduction || 0
+      }
+      return acc
+    },
+    { maxHp: 0, xpMult: 0, hpReduction: 0 }
+  )
+}
+
+// Due-date status for a task: null if no dueDate or task isn't active/completed-in-time
+function getDueInfo(task) {
+  if (!task.dueDate) return null
+  const due = new Date(task.dueDate)
+  if (Number.isNaN(due.getTime())) return null
+  const now = new Date()
+
+  if (task.status === 'completed') {
+    return { state: 'done', key: 'completedOnTime' }
+  }
+  if (task.status === 'abandoned') return null
+
+  const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
+  if (diffHours < 0) {
+    return {
+      state: 'urgent',
+      key: 'overdue',
+      days: Math.max(1, Math.floor(-diffHours / 24)),
+    }
+  }
+  if (diffHours <= 24) {
+    return { state: 'warning', key: 'dueToday' }
+  }
+  return { state: 'ok', key: 'dueIn', days: Math.ceil(diffHours / 24) }
+}
+
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const { i18n, t } = useTranslation()
   const [tasks, setTasks] = useState([])
   const [title, setTitle] = useState('')
   const [type, setType] = useState('daily')
+  const [dueDate, setDueDate] = useState('')
   const [chronicle, setChronicle] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('quests')
+  const [openHistoryId, setOpenHistoryId] = useState(null)
   const [game, setGame] = useState(() =>
     readStoredValue('questlog-game', DEFAULT_GAME)
   )
@@ -104,10 +186,19 @@ export default function App() {
   const [badgeModal, setBadgeModal] = useState(null)
 
   const level = useMemo(() => getLevelInfo(game.xp), [game.xp])
-  const multiplier = getMultiplier(game.streak)
+  const baseMultiplier = getMultiplier(game.streak)
   const weather = getWeather(level.index)
   const language = i18n.resolvedLanguage || 'en'
   const levelTitle = t(`levels.${level.id}`)
+
+  const equipped = useMemo(() => game.equipped || [], [game.equipped])
+
+  const bonuses = useMemo(
+    () => getEquipmentBonuses(equipped, level.index, game.totalCompletions),
+    [equipped, level.index, game.totalCompletions]
+  )
+  const maxHp = BASE_MAX_HP + bonuses.maxHp
+  const multiplier = baseMultiplier * (1 + bonuses.xpMult)
 
   const stats = useMemo(() => {
     const completed = tasks.filter((t) => t.status === 'completed').length
@@ -132,6 +223,23 @@ export default function App() {
     localStorage.setItem('questlog-settings', JSON.stringify(settings))
     setDraftSettings(settings)
   }, [settings])
+
+  // ── Auto-abandon overdue quests ────────────────────────────────────────────
+  useEffect(() => {
+    const checkOverdue = () => {
+      tasks.forEach((task) => {
+        if (task.status !== 'active' || !task.dueDate) return
+        const due = new Date(task.dueDate)
+        if (Number.isNaN(due.getTime())) return
+        if (Date.now() - due.getTime() > 24 * 60 * 60 * 1000) {
+          updateTaskStatus(task.id, 'abandoned')
+        }
+      })
+    }
+    checkOverdue()
+    const interval = setInterval(checkOverdue, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [tasks])
 
   async function fetchTasks() {
     try {
@@ -160,6 +268,7 @@ export default function App() {
     if (nextGame.streak >= 7) earned.add('unstoppable')
     if (nextGame.totalCompletions >= 100) earned.add('centurion')
     if (nextGame.completedTypeCounts.daily >= 7) earned.add('creature-of-habit')
+    if (nextGame.earnedPunctual) earned.add('punctual')
     if (['main', 'side', 'daily'].every(completedType)) earned.add('strategist')
     if (['main', 'side', 'daily'].every(hasType)) earned.add('variety-hero')
     if (nextTasks.length > 0 && completed.length === nextTasks.length)
@@ -186,7 +295,11 @@ export default function App() {
       const r = await fetch(`${API_URL}/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: trimmed, type }),
+        body: JSON.stringify({
+          title: trimmed,
+          type,
+          dueDate: dueDate ? new Date(dueDate).toISOString() : null,
+        }),
       })
       if (!r.ok) throw new Error(t('errors.addQuest'))
       const newTask = await r.json()
@@ -194,6 +307,7 @@ export default function App() {
       setTasks(nextTasks)
       commitGame(game, nextTasks)
       setTitle('')
+      setDueDate('')
       setChronicle('')
     } catch (err) {
       setError(err.message)
@@ -218,12 +332,14 @@ export default function App() {
         status === 'completed'
           ? Math.round(XP_REWARD[task.type] * multiplier)
           : 0
+      const hpDamage = Math.max(0, HP_DAMAGE[task.type] - bonuses.hpReduction)
+      const completedOnTime =
+        status === 'completed' &&
+        task.dueDate &&
+        new Date(task.dueDate).getTime() >= Date.now()
       const nextGame = {
         ...game,
-        hp:
-          status === 'abandoned'
-            ? Math.max(0, game.hp - HP_DAMAGE[task.type])
-            : game.hp,
+        hp: status === 'abandoned' ? Math.max(0, game.hp - hpDamage) : game.hp,
         xp: game.xp + gainedXp,
         totalCompletions:
           game.totalCompletions + (status === 'completed' ? 1 : 0),
@@ -235,6 +351,7 @@ export default function App() {
                 [task.type]: game.completedTypeCounts[task.type] + 1,
               }
             : game.completedTypeCounts,
+        earnedPunctual: game.earnedPunctual || completedOnTime,
       }
       const nextLevel = getLevelInfo(nextGame.xp)
       setTasks(nextTasks)
@@ -277,7 +394,26 @@ export default function App() {
       if (!r.ok) throw new Error(t('errors.generateChronicle'))
       const data = await r.json()
       setChronicle(data.story)
-      commitGame(nextGame, tasks)
+
+      const historyEntry = {
+        id: `${Date.now()}`,
+        date: new Date().toISOString(),
+        story: data.story,
+        completed: stats.completed,
+        total: stats.total,
+        streak: nextGame.streak,
+        hp: nextGame.hp,
+        newBadges: checkedGame.newBadges || [],
+        questLog: tasks.map((task) => ({
+          title: task.title,
+          status: task.status,
+        })),
+      }
+      const nextHistory = [
+        historyEntry,
+        ...(game.chronicleHistory || []),
+      ].slice(0, MAX_HISTORY_ENTRIES)
+      commitGame({ ...nextGame, chronicleHistory: nextHistory }, tasks)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -285,11 +421,23 @@ export default function App() {
     }
   }
 
+  function toggleEquip(id) {
+    const item = EQUIPMENT.find((e) => e.id === id)
+    if (!item || !isEquipmentUnlocked(item, level.index, game.totalCompletions))
+      return
+    const nextEquipped = equipped.includes(id)
+      ? equipped.filter((e) => e !== id)
+      : [...equipped, id]
+    setGame({ ...game, equipped: nextEquipped })
+  }
+
   function saveSettings(e) {
     e.preventDefault()
     setSettings(draftSettings)
     setShowSettings(false)
   }
+
+  const chronicleHistory = game.chronicleHistory || []
 
   return (
     <main className={`game-shell level-${level.index}`}>
@@ -337,11 +485,25 @@ export default function App() {
             >
               {t('tabs.badgesWithCount', { count: game.badges.length })}
             </button>
+            <button
+              className={activeTab === 'equipment' ? 'active' : ''}
+              type="button"
+              onClick={() => setActiveTab('equipment')}
+            >
+              {t('tabs.equipment')}
+            </button>
+            <button
+              className={activeTab === 'history' ? 'active' : ''}
+              type="button"
+              onClick={() => setActiveTab('history')}
+            >
+              {t('tabs.historyWithCount', { count: chronicleHistory.length })}
+            </button>
           </nav>
 
           {error && <p className="error-message">{error}</p>}
 
-          {activeTab === 'quests' ? (
+          {activeTab === 'quests' && (
             <>
               <form className="quest-form" onSubmit={addTask}>
                 <input
@@ -359,6 +521,12 @@ export default function App() {
                   <option value="side">{t('questTypes.side')}</option>
                   <option value="daily">{t('questTypes.daily')}</option>
                 </select>
+                <input
+                  type="datetime-local"
+                  aria-label={t('form.dueDateAriaLabel')}
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                />
                 <button type="submit">{t('form.addQuest')}</button>
               </form>
 
@@ -392,47 +560,78 @@ export default function App() {
                       <p>{t('empty.body')}</p>
                     </div>
                   ) : (
-                    tasks.map((task) => (
-                      <article
-                        className={`quest-card ${task.status}`}
-                        key={task.id}
-                      >
-                        <div className="quest-copy">
-                          <span className={`type-pill ${task.type}`}>
-                            {t(`questTypes.${task.type}`)}
-                          </span>
-                          <h2>{task.title}</h2>
-                          <p>{t(`status.${task.status}`)}</p>
-                        </div>
-                        {task.status === 'active' && (
-                          <div className="quest-actions">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateTaskStatus(task.id, 'completed')
-                              }
-                            >
-                              {t('actions.complete', {
-                                xp: Math.round(
-                                  XP_REWARD[task.type] * multiplier
-                                ),
-                              })}
-                            </button>
-                            <button
-                              className="danger-button"
-                              type="button"
-                              onClick={() =>
-                                updateTaskStatus(task.id, 'abandoned')
-                              }
-                            >
-                              {t('actions.abandon', {
-                                hp: HP_DAMAGE[task.type],
-                              })}
-                            </button>
+                    tasks.map((task) => {
+                      const due = getDueInfo(task)
+                      const hpLoss = Math.max(
+                        0,
+                        HP_DAMAGE[task.type] - bonuses.hpReduction
+                      )
+                      return (
+                        <article
+                          className={`quest-card ${task.status} ${
+                            due ? due.state : ''
+                          }`}
+                          key={task.id}
+                        >
+                          <div className="quest-copy">
+                            <div className="quest-top">
+                              <span className={`type-pill ${task.type}`}>
+                                {t(`questTypes.${task.type}`)}
+                              </span>
+                              {due && (
+                                <span className={`due-badge ${due.state}`}>
+                                  {due.key === 'overdue' &&
+                                    t('dueDates.overdue', { days: due.days })}
+                                  {due.key === 'dueToday' &&
+                                    t('dueDates.dueToday')}
+                                  {due.key === 'dueIn' &&
+                                    t('dueDates.dueIn', { days: due.days })}
+                                  {due.key === 'completedOnTime' &&
+                                    t('dueDates.completedOnTime')}
+                                </span>
+                              )}
+                            </div>
+                            <h2>{task.title}</h2>
+                            <p>{t(`status.${task.status}`)}</p>
+                            {due && due.state === 'urgent' && (
+                              <p className="hp-loss">
+                                {t('dueDates.autoAbandonNote', { hp: hpLoss })}
+                              </p>
+                            )}
+                            {due && due.state === 'warning' && (
+                              <p className="hp-loss">
+                                {t('dueDates.expiresNote', { hp: hpLoss })}
+                              </p>
+                            )}
                           </div>
-                        )}
-                      </article>
-                    ))
+                          {task.status === 'active' && (
+                            <div className="quest-actions">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateTaskStatus(task.id, 'completed')
+                                }
+                              >
+                                {t('actions.complete', {
+                                  xp: Math.round(
+                                    XP_REWARD[task.type] * multiplier
+                                  ),
+                                })}
+                              </button>
+                              <button
+                                className="danger-button"
+                                type="button"
+                                onClick={() =>
+                                  updateTaskStatus(task.id, 'abandoned')
+                                }
+                              >
+                                {t('actions.abandon', { hp: hpLoss })}
+                              </button>
+                            </div>
+                          )}
+                        </article>
+                      )
+                    })
                   )}
                 </div>
 
@@ -453,7 +652,9 @@ export default function App() {
                 </aside>
               </div>
             </>
-          ) : (
+          )}
+
+          {activeTab === 'badges' && (
             <section className="badge-wall">
               {BADGES.map((badge) => {
                 const earned = game.badges.includes(badge.id)
@@ -468,6 +669,187 @@ export default function App() {
                   </article>
                 )
               })}
+            </section>
+          )}
+
+          {activeTab === 'equipment' && (
+            <section className="equipment-layout">
+              <div className="hero-stage">
+                <div className="sprite-wrap">
+                  {equipped.includes('helmet') && <div className="eq-helmet" />}
+                  {equipped.includes('cape') &&
+                    isEquipmentUnlocked(
+                      EQUIPMENT.find((e) => e.id === 'cape'),
+                      level.index,
+                      game.totalCompletions
+                    ) && <div className="eq-cape" />}
+                  {equipped.includes('shield') && <div className="eq-shield" />}
+                  <div className="hero-body" />
+                </div>
+                <div>
+                  <p className="hero-name">{t('profile.name')}</p>
+                  <p className="hero-title">⚔ {levelTitle}</p>
+                </div>
+                <div className="sprite-note">{t('equipment.spriteNote')}</div>
+              </div>
+
+              <div className="eq-right">
+                <div className="eq-slots">
+                  {EQUIPMENT.map((item) => {
+                    const unlocked = isEquipmentUnlocked(
+                      item,
+                      level.index,
+                      game.totalCompletions
+                    )
+                    const isEquipped = unlocked && equipped.includes(item.id)
+                    let reqText = ''
+                    if (!unlocked) {
+                      reqText =
+                        item.requiresLevel != null
+                          ? t('equipment.requiresLevel', {
+                              level: t(
+                                `levels.${LEVELS[item.requiresLevel].id}`
+                              ),
+                            })
+                          : t('equipment.requiresCompletions', {
+                              count: item.requiresCompletions,
+                            })
+                    } else {
+                      reqText = t(`equipment.items.${item.id}.bonus`)
+                    }
+                    return (
+                      <button
+                        type="button"
+                        key={item.id}
+                        className={`eq-slot ${isEquipped ? 'equipped' : ''} ${
+                          unlocked ? '' : 'locked'
+                        }`}
+                        disabled={!unlocked}
+                        onClick={() => toggleEquip(item.id)}
+                      >
+                        <span className="eq-slot-icon">{item.icon}</span>
+                        <span className="eq-slot-name">
+                          {t(`equipment.items.${item.id}.name`)}
+                        </span>
+                        <span className="eq-slot-req">{reqText}</span>
+                      </button>
+                    )
+                  })}
+                </div>
+
+                <div className="eq-bonus-bar">
+                  <div className="pixel-kicker eq-bonus-title">
+                    {t('equipment.activeBonuses')}
+                  </div>
+                  <div className="eq-bonus">
+                    <span className="eq-bonus-icon">❤️</span>
+                    <span className="eq-bonus-label">
+                      {t('equipment.bonus.maxHp')}
+                    </span>
+                    <span className="eq-bonus-val">+{bonuses.maxHp}</span>
+                  </div>
+                  <div className="eq-bonus">
+                    <span className="eq-bonus-icon">⭐</span>
+                    <span className="eq-bonus-label">
+                      {t('equipment.bonus.xpMult')}
+                    </span>
+                    <span className="eq-bonus-val">
+                      +{Math.round(bonuses.xpMult * 100)}%
+                    </span>
+                  </div>
+                  <div className="eq-bonus">
+                    <span className="eq-bonus-icon">🛡️</span>
+                    <span className="eq-bonus-label">
+                      {t('equipment.bonus.hpReduction')}
+                    </span>
+                    <span className="eq-bonus-val">-{bonuses.hpReduction}</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {activeTab === 'history' && (
+            <section className="chronicle-history">
+              {chronicleHistory.length === 0 ? (
+                <div className="empty-state">
+                  <h2>{t('history.emptyTitle')}</h2>
+                  <p>{t('history.emptyBody')}</p>
+                </div>
+              ) : (
+                chronicleHistory.map((entry) => {
+                  const open = openHistoryId === entry.id
+                  const rate =
+                    entry.total === 0
+                      ? 0
+                      : Math.round((entry.completed / entry.total) * 100)
+                  const completedClass =
+                    rate >= 70 ? 'good' : rate >= 40 ? 'warn' : 'crit'
+                  const hpClass =
+                    entry.hp > 60 ? 'good' : entry.hp > 35 ? 'warn' : 'crit'
+                  return (
+                    <article
+                      className={`chronicle-entry ${open ? 'open' : ''}`}
+                      key={entry.id}
+                    >
+                      <button
+                        type="button"
+                        className="chronicle-header"
+                        onClick={() => setOpenHistoryId(open ? null : entry.id)}
+                      >
+                        <div className="chronicle-meta">
+                          <span className="chronicle-date">
+                            {new Date(entry.date).toLocaleDateString(language, {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </span>
+                          <div className="chronicle-stats">
+                            <span className={`c-stat ${completedClass}`}>
+                              {t('history.questCount', {
+                                completed: entry.completed,
+                                total: entry.total,
+                              })}
+                            </span>
+                            <span className="c-stat">
+                              {t('history.streakStat', {
+                                streak: entry.streak,
+                              })}
+                            </span>
+                            <span className={`c-stat ${hpClass}`}>
+                              {t('history.hpStat', { hp: entry.hp })}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="chronicle-chevron">▼</span>
+                      </button>
+                      <div className="chronicle-body">
+                        <p className="chronicle-text">{entry.story}</p>
+                        <hr className="divider" />
+                        <div className="chronicle-quest-log">
+                          {entry.questLog.map((q, i) => (
+                            <span
+                              className={`cq-tag ${
+                                q.status === 'completed' ? 'done' : 'fail'
+                              }`}
+                              key={i}
+                            >
+                              {q.status === 'completed' ? '✓' : '✗'} {q.title}
+                            </span>
+                          ))}
+                          {entry.newBadges.map((badgeId) => (
+                            <span className="chronicle-new-badge" key={badgeId}>
+                              {t('history.newBadge', {
+                                badge: t(`badges.${badgeId}.name`),
+                              })}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })
+              )}
             </section>
           )}
         </div>
@@ -531,10 +913,12 @@ export default function App() {
           >
             <div className="hud-label">
               <span>{t('hud.hp')}</span>
-              <strong>{game.hp}/100</strong>
+              <strong>
+                {game.hp}/{maxHp}
+              </strong>
             </div>
             <div className="meter">
-              <span style={{ width: `${game.hp}%` }} />
+              <span style={{ width: `${(game.hp / maxHp) * 100}%` }} />
             </div>
           </article>
 
@@ -560,7 +944,7 @@ export default function App() {
           {/* Streak */}
           <article className="hud-card streak-card">
             <span>🔥 {game.streak}</span>
-            <p>{t('hud.multiplier', { multiplier })}</p>
+            <p>{t('hud.multiplier', { multiplier: multiplier.toFixed(2) })}</p>
           </article>
         </aside>
       </div>
