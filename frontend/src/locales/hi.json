@@ -32,13 +32,16 @@
   "tabs": {
     "quests": "क्वेस्ट",
     "badges": "बैज",
-    "badgesWithCount": "बैज {{count}}/11"
+    "badgesWithCount": "बैज {{count}}/11",
+    "equipment": "उपकरण",
+    "historyWithCount": "इतिहास ({{count}})"
   },
   "form": {
     "titleAriaLabel": "क्वेस्ट का शीर्षक",
     "typeAriaLabel": "क्वेस्ट का प्रकार",
     "titlePlaceholder": "अपनी क्वेस्ट का नाम लिखें...",
-    "addQuest": "क्वेस्ट जोड़ें"
+    "addQuest": "क्वेस्ट जोड़ें",
+    "dueDateAriaLabel": "देय तिथि (वैकल्पिक)"
   },
   "questTypes": {
     "main": "मुख्य क्वेस्ट",
@@ -154,6 +157,10 @@
     "creature-of-habit": {
       "name": "नियमित साधक",
       "hint": "7 दैनिक क्वेस्ट पूर्ण करें।"
+    },
+    "punctual": {
+      "name": "समयनिष्ठ",
+      "hint": "किसी क्वेस्ट को उसकी देय तिथि से पहले पूरा करें"
     }
   },
   "errors": {
@@ -161,13 +168,6 @@
     "addQuest": "क्वेस्ट जोड़ी नहीं जा सकी।",
     "updateQuest": "क्वेस्ट अपडेट नहीं हो सकी।",
     "generateChronicle": "दैनिक क्रॉनिकल नहीं बन सका।"
-  },
-  "tabs": {
-    "equipment": "उपकरण",
-    "historyWithCount": "इतिहास ({{count}})"
-  },
-  "form": {
-    "dueDateAriaLabel": "देय तिथि (वैकल्पिक)"
   },
   "dueDates": {
     "overdue": "🔥 समय सीमा बीती — {{days}} दिन",
@@ -205,11 +205,5 @@
     "streakStat": "🔥 {{streak}} स्ट्रीक",
     "hpStat": "HP {{hp}}",
     "newBadge": "🏅 {{badge}} बैज अनलॉक हुआ"
-  },
-  "badges": {
-    "punctual": {
-      "name": "समयनिष्ठ",
-      "hint": "किसी क्वेस्ट को उसकी देय तिथि से पहले पूरा करें"
-    }
   }
 }

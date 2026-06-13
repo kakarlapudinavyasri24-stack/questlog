@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from './components/LanguageSwitcher'
 
 const API_URL = 'http://localhost:4000'
 
-// ── Game constants ────────────────────────────────────────────────────────────
 const XP_REWARD = { main: 45, side: 30, daily: 20 }
 const HP_DAMAGE = { main: 25, side: 15, daily: 10 }
 const BASE_MAX_HP = 100
@@ -31,10 +30,6 @@ const BADGES = [
   { id: 'creature-of-habit' },
   { id: 'punctual' },
 ]
-
-// ── Equipment ────────────────────────────────────────────────────────────────
-// Slot order matches the visual sprite overlays (helmet / cape / shield) plus
-// later unlocks (staff, crown, cape-upgrade).
 const EQUIPMENT = [
   { id: 'helmet', icon: '⛑️', bonus: { maxHp: 5 } },
   { id: 'sword', icon: '🗡️', bonus: { xpMult: 0.1 } },
@@ -48,7 +43,6 @@ const EQUIPMENT = [
     requiresCompletions: 100,
   },
 ]
-
 const DEFAULT_GAME = {
   hp: 100,
   xp: 0,
@@ -65,7 +59,6 @@ const DEFAULT_GAME = {
 const DEFAULT_SETTINGS = { apiKey: '', demoMode: true }
 const MAX_HISTORY_ENTRIES = 20
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function readStoredValue(key, fallback) {
   try {
     const stored = localStorage.getItem(key)
@@ -85,13 +78,7 @@ function getLevelInfo(xp) {
     index === LEVELS.length - 1
       ? 100
       : Math.round(((xp - current.xp) / span) * 100)
-  return {
-    index,
-    id: current.id,
-    nextId: next.id,
-    nextXp: next.xp,
-    progress,
-  }
+  return { index, id: current.id, nextId: next.id, nextXp: next.xp, progress }
 }
 
 function getMultiplier(streak) {
@@ -106,7 +93,6 @@ function getWeather(levelIndex) {
   return ['☁️', '🌤️', '🌧️', '🪵']
 }
 
-// Whether an equipment item's unlock requirements are met
 function isEquipmentUnlocked(item, levelIndex, totalCompletions) {
   if (item.requiresLevel != null && levelIndex < item.requiresLevel)
     return false
@@ -118,7 +104,6 @@ function isEquipmentUnlocked(item, levelIndex, totalCompletions) {
   return true
 }
 
-// Sum bonuses across equipped + unlocked items
 function getEquipmentBonuses(equipped, levelIndex, totalCompletions) {
   return EQUIPMENT.reduce(
     (acc, item) => {
@@ -136,33 +121,25 @@ function getEquipmentBonuses(equipped, levelIndex, totalCompletions) {
   )
 }
 
-// Due-date status for a task: null if no dueDate or task isn't active/completed-in-time
 function getDueInfo(task) {
   if (!task.dueDate) return null
   const due = new Date(task.dueDate)
   if (Number.isNaN(due.getTime())) return null
   const now = new Date()
-
-  if (task.status === 'completed') {
+  if (task.status === 'completed')
     return { state: 'done', key: 'completedOnTime' }
-  }
   if (task.status === 'abandoned') return null
-
   const diffHours = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
-  if (diffHours < 0) {
+  if (diffHours < 0)
     return {
       state: 'urgent',
       key: 'overdue',
       days: Math.max(1, Math.floor(-diffHours / 24)),
     }
-  }
-  if (diffHours <= 24) {
-    return { state: 'warning', key: 'dueToday' }
-  }
+  if (diffHours <= 24) return { state: 'warning', key: 'dueToday' }
   return { state: 'ok', key: 'dueIn', days: Math.ceil(diffHours / 24) }
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
   const { i18n, t } = useTranslation()
   const [tasks, setTasks] = useState([])
@@ -190,9 +167,7 @@ export default function App() {
   const weather = getWeather(level.index)
   const language = i18n.resolvedLanguage || 'en'
   const levelTitle = t(`levels.${level.id}`)
-
   const equipped = useMemo(() => game.equipped || [], [game.equipped])
-
   const bonuses = useMemo(
     () => getEquipmentBonuses(equipped, level.index, game.totalCompletions),
     [equipped, level.index, game.totalCompletions]
@@ -201,47 +176,16 @@ export default function App() {
   const multiplier = baseMultiplier * (1 + bonuses.xpMult)
 
   const stats = useMemo(() => {
-    const completed = tasks.filter((t) => t.status === 'completed').length
-    const abandoned = tasks.filter((t) => t.status === 'abandoned').length
-    const active = tasks.filter((t) => t.status === 'active').length
+    const completed = tasks.filter((task) => task.status === 'completed').length
+    const abandoned = tasks.filter((task) => task.status === 'abandoned').length
+    const active = tasks.filter((task) => task.status === 'active').length
     const total = tasks.length
     const completionRate =
       total === 0 ? 0 : Math.round((completed / total) * 100)
     return { completed, abandoned, active, total, completionRate }
   }, [tasks])
 
-  useEffect(() => {
-    fetchTasks()
-  }, [])
-  useEffect(() => {
-    localStorage.setItem('questlog-game', JSON.stringify(game))
-  }, [game])
-  useEffect(() => {
-    document.documentElement.lang = language
-  }, [language])
-  useEffect(() => {
-    localStorage.setItem('questlog-settings', JSON.stringify(settings))
-    setDraftSettings(settings)
-  }, [settings])
-
-  // ── Auto-abandon overdue quests ────────────────────────────────────────────
-  useEffect(() => {
-    const checkOverdue = () => {
-      tasks.forEach((task) => {
-        if (task.status !== 'active' || !task.dueDate) return
-        const due = new Date(task.dueDate)
-        if (Number.isNaN(due.getTime())) return
-        if (Date.now() - due.getTime() > 24 * 60 * 60 * 1000) {
-          updateTaskStatus(task.id, 'abandoned')
-        }
-      })
-    }
-    checkOverdue()
-    const interval = setInterval(checkOverdue, 60 * 1000)
-    return () => clearInterval(interval)
-  }, [tasks])
-
-  async function fetchTasks() {
+  const fetchTasks = useCallback(async () => {
     try {
       setError('')
       const r = await fetch(`${API_URL}/tasks`)
@@ -250,13 +194,30 @@ export default function App() {
     } catch (err) {
       setError(err.message)
     }
-  }
+  }, [t])
 
-  function evaluateBadges(nextGame, nextTasks) {
-    const completed = nextTasks.filter((t) => t.status === 'completed')
-    const abandoned = nextTasks.filter((t) => t.status === 'abandoned')
-    const hasType = (qt) => nextTasks.some((t) => t.type === qt)
-    const completedType = (qt) => completed.some((t) => t.type === qt)
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
+
+  useEffect(() => {
+    localStorage.setItem('questlog-game', JSON.stringify(game))
+  }, [game])
+
+  useEffect(() => {
+    document.documentElement.lang = language
+  }, [language])
+
+  useEffect(() => {
+    localStorage.setItem('questlog-settings', JSON.stringify(settings))
+    setDraftSettings(settings)
+  }, [settings])
+
+  const evaluateBadges = useCallback((nextGame, nextTasks) => {
+    const completed = nextTasks.filter((task) => task.status === 'completed')
+    const abandoned = nextTasks.filter((task) => task.status === 'abandoned')
+    const hasType = (qt) => nextTasks.some((task) => task.type === qt)
+    const completedType = (qt) => completed.some((task) => task.type === qt)
     const earned = new Set(nextGame.badges)
 
     if (nextGame.totalCompletions >= 1) earned.add('first-blood')
@@ -276,15 +237,88 @@ export default function App() {
 
     const newBadges = [...earned].filter((b) => !nextGame.badges.includes(b))
     return { ...nextGame, badges: [...earned], newBadges }
-  }
+  }, [])
 
-  function commitGame(nextGame, nextTasks) {
-    const checked = evaluateBadges(nextGame, nextTasks)
-    const { newBadges, ...gameWithoutMeta } = checked
-    setGame(gameWithoutMeta)
-    if (newBadges.length > 0)
-      setBadgeModal(BADGES.find((b) => b.id === newBadges[0]))
-  }
+  const commitGame = useCallback(
+    (nextGame, nextTasks) => {
+      const checked = evaluateBadges(nextGame, nextTasks)
+      const { newBadges, ...gameWithoutMeta } = checked
+      setGame(gameWithoutMeta)
+      if (newBadges.length > 0)
+        setBadgeModal(BADGES.find((b) => b.id === newBadges[0]))
+    },
+    [evaluateBadges]
+  )
+
+  const updateTaskStatus = useCallback(
+    async (id, status) => {
+      const task = tasks.find((task) => task.id === id)
+      if (!task || task.status !== 'active') return
+      try {
+        setError('')
+        const r = await fetch(`${API_URL}/tasks/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        })
+        if (!r.ok) throw new Error(t('errors.updateQuest'))
+        const updated = await r.json()
+        const nextTasks = tasks.map((task) => (task.id === id ? updated : task))
+        const prevLevel = getLevelInfo(game.xp).index
+        const gainedXp =
+          status === 'completed'
+            ? Math.round(XP_REWARD[task.type] * multiplier)
+            : 0
+        const hpDamage = Math.max(0, HP_DAMAGE[task.type] - bonuses.hpReduction)
+        const completedOnTime =
+          status === 'completed' &&
+          task.dueDate &&
+          new Date(task.dueDate).getTime() >= Date.now()
+        const nextGame = {
+          ...game,
+          hp:
+            status === 'abandoned' ? Math.max(0, game.hp - hpDamage) : game.hp,
+          xp: game.xp + gainedXp,
+          totalCompletions:
+            game.totalCompletions + (status === 'completed' ? 1 : 0),
+          totalAbandons: game.totalAbandons + (status === 'abandoned' ? 1 : 0),
+          completedTypeCounts:
+            status === 'completed'
+              ? {
+                  ...game.completedTypeCounts,
+                  [task.type]: game.completedTypeCounts[task.type] + 1,
+                }
+              : game.completedTypeCounts,
+          earnedPunctual: game.earnedPunctual || Boolean(completedOnTime),
+        }
+        const nextLevel = getLevelInfo(nextGame.xp)
+        setTasks(nextTasks)
+        commitGame(nextGame, nextTasks)
+        setChronicle('')
+        if (nextLevel.index > prevLevel) setLevelModal(nextLevel)
+      } catch (err) {
+        setError(err.message)
+      }
+    },
+    [tasks, game, multiplier, bonuses.hpReduction, t, commitGame]
+  )
+
+  // Auto-abandon overdue quests — depends on stable updateTaskStatus
+  useEffect(() => {
+    const checkOverdue = () => {
+      tasks.forEach((task) => {
+        if (task.status !== 'active' || !task.dueDate) return
+        const due = new Date(task.dueDate)
+        if (Number.isNaN(due.getTime())) return
+        if (Date.now() - due.getTime() > 24 * 60 * 60 * 1000) {
+          updateTaskStatus(task.id, 'abandoned')
+        }
+      })
+    }
+    checkOverdue()
+    const interval = setInterval(checkOverdue, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [tasks, updateTaskStatus])
 
   async function addTask(e) {
     e.preventDefault()
@@ -309,55 +343,6 @@ export default function App() {
       setTitle('')
       setDueDate('')
       setChronicle('')
-    } catch (err) {
-      setError(err.message)
-    }
-  }
-
-  async function updateTaskStatus(id, status) {
-    const task = tasks.find((t) => t.id === id)
-    if (!task || task.status !== 'active') return
-    try {
-      setError('')
-      const r = await fetch(`${API_URL}/tasks/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      })
-      if (!r.ok) throw new Error(t('errors.updateQuest'))
-      const updated = await r.json()
-      const nextTasks = tasks.map((t) => (t.id === id ? updated : t))
-      const prevLevel = getLevelInfo(game.xp).index
-      const gainedXp =
-        status === 'completed'
-          ? Math.round(XP_REWARD[task.type] * multiplier)
-          : 0
-      const hpDamage = Math.max(0, HP_DAMAGE[task.type] - bonuses.hpReduction)
-      const completedOnTime =
-        status === 'completed' &&
-        task.dueDate &&
-        new Date(task.dueDate).getTime() >= Date.now()
-      const nextGame = {
-        ...game,
-        hp: status === 'abandoned' ? Math.max(0, game.hp - hpDamage) : game.hp,
-        xp: game.xp + gainedXp,
-        totalCompletions:
-          game.totalCompletions + (status === 'completed' ? 1 : 0),
-        totalAbandons: game.totalAbandons + (status === 'abandoned' ? 1 : 0),
-        completedTypeCounts:
-          status === 'completed'
-            ? {
-                ...game.completedTypeCounts,
-                [task.type]: game.completedTypeCounts[task.type] + 1,
-              }
-            : game.completedTypeCounts,
-        earnedPunctual: game.earnedPunctual || completedOnTime,
-      }
-      const nextLevel = getLevelInfo(nextGame.xp)
-      setTasks(nextTasks)
-      commitGame(nextGame, nextTasks)
-      setChronicle('')
-      if (nextLevel.index > prevLevel) setLevelModal(nextLevel)
     } catch (err) {
       setError(err.message)
     }
@@ -441,7 +426,6 @@ export default function App() {
 
   return (
     <main className={`game-shell level-${level.index}`}>
-      {/* ── Top Nav ── */}
       <header className="top-bar">
         <div className="brand">
           <div className="brand-coin">⚔</div>
@@ -460,16 +444,13 @@ export default function App() {
       </header>
 
       <div className="page-body">
-        {/* ── Main column ── */}
         <div className="main-column">
-          {/* Hero banner */}
           <div className="hero-banner">
             <div className="weather-line">{weather.join(' ')}</div>
             <p className="pixel-kicker">{t('hero.kicker')}</p>
             <h2>{t('hero.tagline')}</h2>
           </div>
 
-          {/* Tabs */}
           <nav className="tab-bar">
             <button
               className={activeTab === 'quests' ? 'active' : ''}
@@ -503,6 +484,7 @@ export default function App() {
 
           {error && <p className="error-message">{error}</p>}
 
+          {/* ── Quests tab ── */}
           {activeTab === 'quests' && (
             <>
               <form className="quest-form" onSubmit={addTask}>
@@ -568,9 +550,7 @@ export default function App() {
                       )
                       return (
                         <article
-                          className={`quest-card ${task.status} ${
-                            due ? due.state : ''
-                          }`}
+                          className={`quest-card ${task.status}${due ? ` ${due.state}` : ''}`}
                           key={task.id}
                         >
                           <div className="quest-copy">
@@ -593,12 +573,12 @@ export default function App() {
                             </div>
                             <h2>{task.title}</h2>
                             <p>{t(`status.${task.status}`)}</p>
-                            {due && due.state === 'urgent' && (
+                            {due?.state === 'urgent' && (
                               <p className="hp-loss">
                                 {t('dueDates.autoAbandonNote', { hp: hpLoss })}
                               </p>
                             )}
-                            {due && due.state === 'warning' && (
+                            {due?.state === 'warning' && (
                               <p className="hp-loss">
                                 {t('dueDates.expiresNote', { hp: hpLoss })}
                               </p>
@@ -654,6 +634,7 @@ export default function App() {
             </>
           )}
 
+          {/* ── Badges tab ── */}
           {activeTab === 'badges' && (
             <section className="badge-wall">
               {BADGES.map((badge) => {
@@ -672,6 +653,7 @@ export default function App() {
             </section>
           )}
 
+          {/* ── Equipment tab ── */}
           {activeTab === 'equipment' && (
             <section className="equipment-layout">
               <div className="hero-stage">
@@ -702,28 +684,20 @@ export default function App() {
                       game.totalCompletions
                     )
                     const isEquipped = unlocked && equipped.includes(item.id)
-                    let reqText = ''
-                    if (!unlocked) {
-                      reqText =
-                        item.requiresLevel != null
-                          ? t('equipment.requiresLevel', {
-                              level: t(
-                                `levels.${LEVELS[item.requiresLevel].id}`
-                              ),
-                            })
-                          : t('equipment.requiresCompletions', {
-                              count: item.requiresCompletions,
-                            })
-                    } else {
-                      reqText = t(`equipment.items.${item.id}.bonus`)
-                    }
+                    const reqText = !unlocked
+                      ? item.requiresLevel != null
+                        ? t('equipment.requiresLevel', {
+                            level: t(`levels.${LEVELS[item.requiresLevel].id}`),
+                          })
+                        : t('equipment.requiresCompletions', {
+                            count: item.requiresCompletions,
+                          })
+                      : t(`equipment.items.${item.id}.bonus`)
                     return (
                       <button
                         type="button"
                         key={item.id}
-                        className={`eq-slot ${isEquipped ? 'equipped' : ''} ${
-                          unlocked ? '' : 'locked'
-                        }`}
+                        className={`eq-slot${isEquipped ? ' equipped' : ''}${unlocked ? '' : ' locked'}`}
                         disabled={!unlocked}
                         onClick={() => toggleEquip(item.id)}
                       >
@@ -769,6 +743,7 @@ export default function App() {
             </section>
           )}
 
+          {/* ── History tab ── */}
           {activeTab === 'history' && (
             <section className="chronicle-history">
               {chronicleHistory.length === 0 ? (
@@ -789,7 +764,7 @@ export default function App() {
                     entry.hp > 60 ? 'good' : entry.hp > 35 ? 'warn' : 'crit'
                   return (
                     <article
-                      className={`chronicle-entry ${open ? 'open' : ''}`}
+                      className={`chronicle-entry${open ? ' open' : ''}`}
                       key={entry.id}
                     >
                       <button
@@ -829,9 +804,7 @@ export default function App() {
                         <div className="chronicle-quest-log">
                           {entry.questLog.map((q, i) => (
                             <span
-                              className={`cq-tag ${
-                                q.status === 'completed' ? 'done' : 'fail'
-                              }`}
+                              className={`cq-tag ${q.status === 'completed' ? 'done' : 'fail'}`}
                               key={i}
                             >
                               {q.status === 'completed' ? '✓' : '✗'} {q.title}
@@ -864,7 +837,6 @@ export default function App() {
                 <p className="profile-level">{levelTitle}</p>
               </div>
             </div>
-
             <div className="profile-stats-grid">
               <div className="profile-stat">
                 <span className="stat-icon">⭐</span>
@@ -901,15 +873,13 @@ export default function App() {
                 </div>
               </div>
             </div>
-
             <button className="wide-button" type="button">
               {t('profile.view')}
             </button>
           </div>
 
-          {/* HP */}
           <article
-            className={`hud-card hp-card ${game.hp <= 35 ? 'critical' : ''}`}
+            className={`hud-card hp-card${game.hp <= 35 ? ' critical' : ''}`}
           >
             <div className="hud-label">
               <span>{t('hud.hp')}</span>
@@ -922,7 +892,6 @@ export default function App() {
             </div>
           </article>
 
-          {/* XP / Level */}
           <article className="hud-card">
             <div className="hud-label">
               <span>{levelTitle}</span>
@@ -941,7 +910,6 @@ export default function App() {
             </small>
           </article>
 
-          {/* Streak */}
           <article className="hud-card streak-card">
             <span>🔥 {game.streak}</span>
             <p>{t('hud.multiplier', { multiplier: multiplier.toFixed(2) })}</p>

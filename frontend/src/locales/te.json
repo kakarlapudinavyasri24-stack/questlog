@@ -32,13 +32,16 @@
   "tabs": {
     "quests": "క్వెస్ట్‌లు",
     "badges": "బ్యాడ్జ్‌లు",
-    "badgesWithCount": "బ్యాడ్జ్‌లు {{count}}/11"
+    "badgesWithCount": "బ్యాడ్జ్‌లు {{count}}/11",
+    "equipment": "సామగ్రి",
+    "historyWithCount": "చరిత్ర ({{count}})"
   },
   "form": {
     "titleAriaLabel": "క్వెస్ట్ శీర్షిక",
     "typeAriaLabel": "క్వెస్ట్ రకం",
     "titlePlaceholder": "మీ క్వెస్ట్‌కు పేరు పెట్టండి...",
-    "addQuest": "క్వెస్ట్ జోడించండి"
+    "addQuest": "క్వెస్ట్ జోడించండి",
+    "dueDateAriaLabel": "గడువు తేదీ (ఐచ్ఛికం)"
   },
   "questTypes": {
     "main": "ప్రధాన క్వెస్ట్",
@@ -154,6 +157,10 @@
     "creature-of-habit": {
       "name": "నియమిత సాధకుడు",
       "hint": "7 రోజువారీ క్వెస్ట్‌లను పూర్తి చేయండి."
+    },
+    "punctual": {
+      "name": "సమయపాలకుడు",
+      "hint": "గడువు తేదీకి ముందు క్వెస్ట్‌ను పూర్తి చేయండి"
     }
   },
   "errors": {
@@ -161,13 +168,6 @@
     "addQuest": "క్వెస్ట్‌ను జోడించలేకపోయాము.",
     "updateQuest": "క్వెస్ట్‌ను నవీకరించలేకపోయాము.",
     "generateChronicle": "రోజువారీ క్రానికల్‌ను రూపొందించలేకపోయాము."
-  },
-  "tabs": {
-    "equipment": "సామగ్రి",
-    "historyWithCount": "చరిత్ర ({{count}})"
-  },
-  "form": {
-    "dueDateAriaLabel": "గడువు తేదీ (ఐచ్ఛికం)"
   },
   "dueDates": {
     "overdue": "🔥 గడువు ముగిసింది — {{days}} రోజు",
@@ -205,11 +205,5 @@
     "streakStat": "🔥 {{streak}} వరుస",
     "hpStat": "HP {{hp}}",
     "newBadge": "🏅 {{badge}} బ్యాడ్జ్ అన్‌లాక్ అయింది"
-  },
-  "badges": {
-    "punctual": {
-      "name": "కచ్చితమైన",
-      "hint": "క్వెస్ట్‌ను దాని గడువు తేదీకి ముందు పూర్తి చేయండి"
-    }
   }
 }
