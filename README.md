@@ -9,7 +9,8 @@ Daily Chronicle.
 
 ## Live Demo
 
-https://6a2ba5684edf181a9d7d5408--questlog-duobingo.netlify.app/
+https://6a2cd70ea01a85d226d2e2e7--questlog-duobingo.netlify.app/
+
 
 ---
 
