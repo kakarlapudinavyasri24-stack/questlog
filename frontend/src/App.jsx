@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from './components/LanguageSwitcher'
 
-const API_URL = 'http://localhost:4000'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 const XP_REWARD = { main: 45, side: 30, daily: 20 }
 const HP_DAMAGE = { main: 25, side: 15, daily: 10 }
