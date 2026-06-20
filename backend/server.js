@@ -1,29 +1,42 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
+const { Pool } = require("pg");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const DB_PATH = path.join(__dirname, "db.json");
 
-app.use(cors());
-app.use(express.json());
+// ── Database setup ────────────────────────────────────────────────────────────
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
+});
 
-function readDb() {
-  try {
-    const raw = fs.readFileSync(DB_PATH, "utf8");
-    const data = JSON.parse(raw);
-    return { tasks: Array.isArray(data.tasks) ? data.tasks : [] };
-  } catch {
-    return { tasks: [] };
-  }
+async function initDb() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      type TEXT DEFAULT 'daily',
+      status TEXT DEFAULT 'active',
+      due_date TEXT,
+      created_at TEXT
+    )
+  `);
+  console.log("Database initialized.");
 }
 
-function writeDb(data) {
-  fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2));
+function rowToTask(r) {
+  return {
+    id: r.id,
+    title: r.title,
+    type: r.type,
+    status: r.status,
+    dueDate: r.due_date,
+    createdAt: r.created_at
+  };
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function normalizeTaskType(type) {
   return ["main", "side", "daily"].includes(type) ? type : "daily";
 }
@@ -75,7 +88,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     if (total === 0) {
       return `आज ${title} के लॉग में कोई क्वेस्ट दर्ज नहीं थी — केवल एक शांत राह और प्रतीक्षा करता आकाश। राज्य में कोई हलचल नहीं हुई, पर इरादे की लौ अभी भी जल रही है। कल, एक छोटी सी क्वेस्ट भी किंवदंती की शुरुआत कर सकती है।`;
     }
-
     const completedNames = completed
       .slice(0, 3)
       .map((t) => `"${t.title}"`)
@@ -84,7 +96,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       .slice(0, 2)
       .map((t) => `"${t.title}"`)
       .join(", ");
-
     const opening =
       hp <= 35
         ? `लहूलुहान पर डटे हुए, ${title} ने आज ${total} क्वेस्ट${total === 1 ? "" : "ों"} के साथ एक कठिन दिन पार किया।`
@@ -111,7 +122,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       hp <= 35
         ? "अभी विश्राम करो, कवच सुधारो, और ज़ख्मों से तेज़ होकर लौटो।"
         : "वृत्तांत अनुभव के साथ बंद होता है — एक नया सवेरा द्वार पर खड़ा है।";
-
     return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
   }
 
@@ -119,7 +129,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     if (total === 0) {
       return `ఈ రోజు ${title} లాగ్‌లో ఏ క్వెస్ట్ కూడా నమోదు కాలేదు — నిశ్శబ్ద మార్గం మరియు ఎదురుచూస్తున్న ఆకాశం మాత్రమే ఉన్నాయి. రాజ్యంలో పెద్ద కదలిక లేకపోయినా, సంకల్ప జ్యోతి ఇంకా వెలుగుతోంది. రేపు ఒక చిన్న క్వెస్ట్ కూడా కొత్త గాథకు ఆరంభం కావచ్చు.`;
     }
-
     const completedNames = completed
       .slice(0, 3)
       .map((t) => `"${t.title}"`)
@@ -128,7 +137,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       .slice(0, 2)
       .map((t) => `"${t.title}"`)
       .join(", ");
-
     const opening =
       hp <= 35
         ? `గాయాలతోనూ నిలబడి, ${title} ఈ రోజు ${total} క్వెస్ట్${total === 1 ? "" : "‌ల"}తో కఠినమైన రోజును దాటారు.`
@@ -155,7 +163,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
       hp <= 35
         ? "ఇప్పుడు విశ్రాంతి తీసుకోండి, కవచాన్ని సరిచేసుకోండి, గాయాలకంటే పదునుగా తిరిగి రండి."
         : "సంపాదించిన అనుభవంతో ఈ క్రానికల్ ముగుస్తుంది; మరో ఉదయం ద్వారం వద్ద ఎదురుచూస్తోంది.";
-
     return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
   }
 
@@ -163,7 +170,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
   if (total === 0) {
     return `The ${title} found no quests etched into the log today, only a quiet road and a waiting sky. The realm did not move, but the flame of intent still flickered. Tomorrow, even one small quest can begin the legend again.`;
   }
-
   const completedNames = completed
     .slice(0, 3)
     .map((task) => `"${task.title}"`)
@@ -172,7 +178,6 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     .slice(0, 2)
     .map((task) => `"${task.title}"`)
     .join(", ");
-
   const opening =
     hp <= 35
       ? `Bloodied but upright, the ${title} dragged the Questlog through a hard day of ${total} quest${total === 1 ? "" : "s"}.`
@@ -199,26 +204,32 @@ function mockChronicle(tasks, gameState = {}, lang = "en") {
     hp <= 35
       ? "Rest now, repair the armor, and return sharper than the wounds."
       : "The chronicle closes with experience earned and another dawn waiting at the gate.";
-
   return `${opening} ${progress} ${losses} ${streakLine} ${closing}`;
 }
+
+// ── Routes ────────────────────────────────────────────────────────────────────
+app.use(cors());
+app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("Questlog backend is running.");
 });
 
-app.get("/tasks", (req, res) => {
-  const data = readDb();
-  res.json(data.tasks);
+app.get("/tasks", async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM tasks ORDER BY created_at ASC");
+    res.json(rows.map(rowToTask));
+  } catch (err) {
+    console.error("GET /tasks error:", err.message);
+    res.status(500).json({ error: "Failed to fetch tasks." });
+  }
 });
 
-app.post("/tasks", (req, res) => {
+app.post("/tasks", async (req, res) => {
   const { title, type, dueDate } = req.body;
   if (!title) {
     return res.status(400).json({ error: "Task title is required." });
   }
-
-  const data = readDb();
   const newTask = {
     id: Date.now().toString(),
     title: String(title).trim(),
@@ -227,50 +238,68 @@ app.post("/tasks", (req, res) => {
     dueDate: dueDate ? String(dueDate) : null,
     createdAt: new Date().toISOString()
   };
-
-  data.tasks.push(newTask);
-  writeDb(data);
-  res.status(201).json(newTask);
+  try {
+    await pool.query(
+      "INSERT INTO tasks (id, title, type, status, due_date, created_at) VALUES ($1, $2, $3, $4, $5, $6)",
+      [newTask.id, newTask.title, newTask.type, newTask.status, newTask.dueDate, newTask.createdAt]
+    );
+    res.status(201).json(newTask);
+  } catch (err) {
+    console.error("POST /tasks error:", err.message);
+    res.status(500).json({ error: "Failed to create task." });
+  }
 });
-app.put("/tasks/:id", (req, res) => {
+
+app.put("/tasks/:id", async (req, res) => {
   const { status, dueDate } = req.body;
-  const data = readDb();
-  const task = data.tasks.find((item) => item.id === req.params.id);
-
-  if (!task) {
-    return res.status(404).json({ error: "Task not found." });
+  try {
+    const { rows } = await pool.query("SELECT * FROM tasks WHERE id = $1", [req.params.id]);
+    if (!rows.length) {
+      return res.status(404).json({ error: "Task not found." });
+    }
+    await pool.query(
+      `UPDATE tasks SET
+        status   = COALESCE($1, status),
+        due_date = CASE WHEN $2::boolean THEN $3 ELSE due_date END
+       WHERE id = $4`,
+      [status || null, dueDate !== undefined, dueDate ? String(dueDate) : null, req.params.id]
+    );
+    const { rows: updated } = await pool.query("SELECT * FROM tasks WHERE id = $1", [
+      req.params.id
+    ]);
+    res.json(rowToTask(updated[0]));
+  } catch (err) {
+    console.error("PUT /tasks/:id error:", err.message);
+    res.status(500).json({ error: "Failed to update task." });
   }
+});
 
-  if (status) {
-    task.status = status;
+app.delete("/tasks/:id", async (req, res) => {
+  try {
+    const { rowCount } = await pool.query("DELETE FROM tasks WHERE id = $1", [req.params.id]);
+    if (!rowCount) return res.status(404).json({ error: "Task not found." });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /tasks/:id error:", err.message);
+    res.status(500).json({ error: "Failed to delete task." });
   }
-  if (dueDate !== undefined) {
-    task.dueDate = dueDate ? String(dueDate) : null;
-  }
-
-  writeDb(data);
-  res.json(task);
 });
 
 // ── Chronicle route ───────────────────────────────────────────────────────────
 app.post("/chronicle", async (req, res) => {
   const { tasks, gameState, demoMode, lang = "en" } = req.body;
 
-  // Demo mode — use local mock, no AI call
   if (demoMode) {
     return res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
   }
 
-  // Live mode — call Groq
   const groqApiKey = process.env.GROQ_API_KEY;
   if (!groqApiKey) {
-    // No key set — silently fall back to mock
     return res.json({ story: mockChronicle(tasks || [], gameState || {}, lang) });
   }
 
   try {
     const prompt = buildChroniclePrompt(tasks || [], gameState || {}, lang);
-
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -301,21 +330,25 @@ app.post("/chronicle", async (req, res) => {
   }
 });
 
+// ── Start ─────────────────────────────────────────────────────────────────────
 const HOST = process.env.HOST || "0.0.0.0";
-const LISTEN_ADDRESS = HOST === "0.0.0.0" ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`;
 
 if (require.main === module) {
-  app.listen(PORT, HOST, () => {
-    console.log(`Backend running at ${LISTEN_ADDRESS}`);
-    console.log(`Listening on ${HOST}:${PORT}`);
-  });
+  initDb()
+    .then(() => {
+      app.listen(PORT, HOST, () => {
+        console.log(`Backend running at http://${HOST}:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error("Failed to initialize database:", err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = {
   app,
   buildChroniclePrompt,
   mockChronicle,
-  normalizeTaskType,
-  readDb,
-  writeDb
+  normalizeTaskType
 };
