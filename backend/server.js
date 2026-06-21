@@ -333,22 +333,25 @@ app.post("/chronicle", async (req, res) => {
 // ── Start ─────────────────────────────────────────────────────────────────────
 const HOST = process.env.HOST || "0.0.0.0";
 
+async function start() {
+  await initDb();
+  return app.listen(PORT, HOST, () => {
+    console.log(`Backend running at http://${HOST}:${PORT}`);
+  });
+}
+
 if (require.main === module) {
-  initDb()
-    .then(() => {
-      app.listen(PORT, HOST, () => {
-        console.log(`Backend running at http://${HOST}:${PORT}`);
-      });
-    })
-    .catch((err) => {
-      console.error("Failed to initialize database:", err.message);
-      process.exit(1);
-    });
+  start().catch((err) => {
+    console.error("Failed to initialize database:", err.message);
+    process.exit(1);
+  });
 }
 
 module.exports = {
   app,
   buildChroniclePrompt,
+  initDb,
   mockChronicle,
-  normalizeTaskType
+  normalizeTaskType,
+  start
 };
